@@ -32,8 +32,13 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      # enablement turns Pages on via the API using the pages:write permission
+      # above, so a fresh clone of this repo deploys without anyone having to
+      # visit Settings first.
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
