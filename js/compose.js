@@ -71,17 +71,19 @@ export class ComposeFlow {
   async renderCameraStep() {
     clear(this.panel);
     const video = el('video', { class: 'compose__video', autoplay: true, playsinline: true, muted: true });
-    const stage = el('div', { class: 'compose__stage' }, [video]);
+
+    // The shutter is laid over the preview rather than placed below it. A phone's
+    // rear camera is portrait, so a stage sized to the video pushed the button
+    // past the bottom of the screen and made you scroll to take a photo.
     const shutter = el('button', { class: 'shutter', type: 'button', 'aria-label': 'Take photo' }, [
       el('span', { class: 'shutter__inner' }),
     ]);
-
     const hint = el('p', { class: 'compose__hint', text: 'Photograph the shelf. Avoid including people.' });
+    const stage = el('div', { class: 'compose__stage' }, [video, hint, shutter]);
 
     this.panel.append(
       header('New sighting', () => this.modal.close()),
       stage,
-      el('div', { class: 'compose__camerabar' }, [hint, shutter]),
     );
 
     try {
@@ -105,10 +107,6 @@ export class ComposeFlow {
         el('h3', { text: 'Camera unavailable' }),
         el('p', { class: 'muted', text:
           'PokeRadar posts are camera-only — no gallery uploads — so every photo is taken at the shelf. This browser has no camera available, so you can continue with a generated demo frame instead.' }),
-      ]));
-      shutter.remove();
-      hint.remove();
-      this.panel.querySelector('.compose__camerabar').append(
         el('button', {
           class: 'btn btn--primary', type: 'button', text: 'Use a demo photo',
           onclick: () => {
@@ -120,7 +118,7 @@ export class ComposeFlow {
             this.renderDetailsStep();
           },
         }),
-      );
+      ]));
     }
   }
 

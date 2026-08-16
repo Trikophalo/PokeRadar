@@ -931,7 +931,14 @@ body.is-booting .shell { opacity: 0; }
   transition: transform 380ms var(--spring);
 }
 .modal--open .modal__panel { transform: translateY(0); }
-.modal__panel--tall { height: 92%; }
+.modal__panel--tall {
+  height: 92%;
+  /* Flex column so the camera stage can claim all height under the header. */
+  display: flex;
+  flex-direction: column;
+}
+.modal__panel--tall > * { flex: none; }
+.modal__panel--tall > .compose__stage { flex: 1; }
 .modal__panel--short { max-height: 78%; }
 
 /* --------------------------------------------------------------- compose --- */
@@ -951,46 +958,79 @@ body.is-booting .shell { opacity: 0; }
   margin: 0;
 }
 
+/* The camera stage fills the sheet and the controls float on top of the
+   preview, iOS-camera style. Sizing the stage to the video pushed the shutter
+   below the fold on portrait phone cameras — the preview is a backdrop, never
+   the thing that dictates layout. */
 .compose__stage {
   position: relative;
   flex: 1;
-  min-height: 240px;
+  min-height: 0;
   border-radius: var(--r-lg);
   overflow: hidden;
-  background: #000;
-  display: grid;
-  place-items: center;
+  background: #101014;
 }
-.compose__video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.compose__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-.compose__nocam { padding: 26px 20px; text-align: center; color: var(--ink); background: var(--surface-2); height: 100%; display: grid; align-content: center; gap: 6px; }
+.compose__nocam {
+  position: absolute;
+  inset: 0;
+  padding: 26px 22px;
+  text-align: center;
+  color: var(--ink);
+  background: var(--surface-2);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+}
 .compose__nocam-glyph { font-size: 2rem; }
 .compose__nocam h3 { margin: 0; font-size: 1.0625rem; }
+.compose__nocam .btn { margin-top: 8px; }
 
-.compose__camerabar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 0 4px;
+.compose__hint {
+  position: absolute;
+  left: 16px; right: 16px;
+  bottom: 118px;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
 }
-.compose__hint { margin: 0; font-size: 0.8125rem; color: var(--ink-2); text-align: center; }
 
+/* The white iOS-style shutter: a white ring with a white disc inside, floating
+   over the preview. padding: 0 matters — the browser's default button padding
+   is asymmetric and shoved the disc off-centre inside the ring. */
 .shutter {
-  width: 68px; height: 68px;
+  position: absolute;
+  left: 50%;
+  bottom: calc(26px + var(--safe-bottom));
+  transform: translateX(-50%);
+  width: 76px; height: 76px;
+  padding: 0;
   border-radius: 50%;
-  border: 3.5px solid var(--ink);
+  border: 4.5px solid #fff;
   background: transparent;
   display: grid;
   place-items: center;
-  transition: transform 140ms var(--spring);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
 }
-.shutter:active { transform: scale(0.9); }
 .shutter__inner {
-  width: 54px; height: 54px;
+  width: 60px; height: 60px;
   border-radius: 50%;
-  background: var(--accent);
+  background: #fff;
+  transition: transform 120ms var(--spring);
 }
+.shutter:active .shutter__inner { transform: scale(0.82); }
 
 .compose__details { display: flex; flex-direction: column; gap: 14px; }
 .compose__preview {
