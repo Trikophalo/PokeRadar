@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>PokeRadar — live restock radar</title>
+<meta name="description" content="A live map of Pokémon merchandise restocks in physical stores. Sightings expire after one hour, and karma rewards the reporters who get it right." />
+<meta name="theme-color" content="#F7F7F8" />
+<meta name="color-scheme" content="light dark" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="PokeRadar" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./assets/icon-192.png" />
+<link rel="stylesheet" href="./vendor/maplibre/maplibre-gl.css" />
+<link rel="stylesheet" href="./css/app.css" />
+</head>
+<body class="is-booting">
+
+<div id="splash" class="splash">
+  <div class="splash__mark">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle class="splash__track" cx="32" cy="32" r="28" />
+      <circle class="splash__arc" cx="32" cy="32" r="28" transform="rotate(-90 32 32)" />
+      <circle class="splash__halo" cx="32" cy="32" r="16" />
+      <circle class="splash__dot" cx="32" cy="32" r="11" />
+    </svg>
+  </div>
+  <p class="splash__word">PokeRadar</p>
+  <p class="splash__hint">Finding sightings near you…</p>
+</div>
+
+<main id="shell" class="shell" aria-label="PokeRadar">
+  <div id="map" class="map" role="application" aria-label="Map of nearby restock sightings"></div>
+
+  <!-- Floating chrome, layered over the map (PLANNING.md §5) -->
+  <div class="chrome chrome--top">
+    <div class="brand" aria-hidden="true">
+      <span class="brand__dot"></span>
+      <span class="brand__word">PokeRadar</span>
+    </div>
+    <div class="chrome__spacer"></div>
+    <button id="theme-toggle" class="pillbtn" type="button" aria-label="Appearance">◐</button>
+    <button id="account" class="pillbtn pillbtn--account" type="button" aria-label="Sign in"></button>
+  </div>
+
+  <button id="locate" class="pillbtn pillbtn--locate" type="button" aria-label="Centre on my location">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="12" cy="12" r="8.4" fill="none" />
+      <line x1="12" y1="1.4" x2="12" y2="4.4" />
+      <line x1="12" y1="19.6" x2="12" y2="22.6" />
+      <line x1="1.4" y1="12" x2="4.4" y2="12" />
+      <line x1="19.6" y1="12" x2="22.6" y2="12" />
+    </svg>
+  </button>
+
+  <button id="fab" class="fab" type="button" aria-label="Report a restock">
+    <span class="fab__ring" aria-hidden="true"></span>
+    <span class="fab__label">+</span>
+  </button>
+
+  <!-- Persistent sheet: peek / half / full -->
+  <section id="sheet" class="sheet" aria-label="Sightings">
+    <div class="sheet__grabber" role="separator" aria-orientation="horizontal"><span></span></div>
+    <header class="sheet__head">
+      <button id="sheet-back" class="iconbtn" type="button" aria-label="Back to list" hidden>‹</button>
+      <div class="sheet__headings">
+        <h1 id="sheet-title" class="sheet__title">Nearby sightings</h1>
+        <p class="sheet__sub"><span id="sheet-sub">last hour</span> · <span id="sheet-count">—</span></p>
+      </div>
+    </header>
+    <div class="sheet__scroll">
+      <div id="sheet-content" class="sheet__content"></div>
+      <footer class="sheet__footer">
+        <p>Sightings drop off the map one hour after capture. Votes stay open for six.</p>
+        <p class="sheet__footer-note">Prototype — data lives in this browser only. <a href="./PLANNING.md">Read the architecture plan</a></p>
+      </footer>
+    </div>
+  </section>
+
+  <div id="compose-modal" class="modal" hidden>
+    <div class="modal__scrim"></div>
+    <div class="modal__panel modal__panel--tall" role="dialog" aria-modal="true" aria-label="New sighting"></div>
+  </div>
+
+  <div id="profile-modal" class="modal" hidden>
+    <div class="modal__scrim"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="Profile"></div>
+  </div>
+
+  <div id="auth-modal" class="modal" hidden>
+    <div class="modal__scrim"></div>
+    <div class="modal__panel modal__panel--short" role="dialog" aria-modal="true" aria-label="Sign in"></div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</main>
+
+<script src="./vendor/maplibre/maplibre-gl.js"></script>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>

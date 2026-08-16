@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="PokeRadar">
+  <defs>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F0EFF2"/>
+    </linearGradient>
+    <linearGradient id="disc" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#FF5B34"/>
+      <stop offset="1" stop-color="#D62B06"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#40100A" flood-opacity="0.24"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#ground)"/>
+
+  <!-- Radar sweep: the countdown ring that wraps every marker in the app -->
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#E7E5EA" stroke-width="26"/>
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#E3350D" stroke-width="26"
+          stroke-linecap="round" stroke-dasharray="713 1056" transform="rotate(-90 256 256)"/>
+
+  <!-- The marker itself: a photo disc in a white ring -->
+  <circle cx="256" cy="256" r="104" fill="#FFFFFF" filter="url(#soft)"/>
+  <circle cx="256" cy="256" r="86" fill="url(#disc)"/>
+  <circle cx="256" cy="256" r="30" fill="#FFFFFF" opacity="0.94"/>
+</svg>
