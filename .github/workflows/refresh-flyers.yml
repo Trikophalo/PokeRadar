@@ -1,0 +1,63 @@
+name: Refresh flyers
+
+# The daily flyer job (PLANNING.md §10.4). On a static host the "once a day"
+# refresh is a scheduled Action: regenerate data/flyers.json, commit it if it
+# changed, and publish. In production the same job is pg_cron calling an edge
+# function that writes to Postgres instead.
+
+on:
+  schedule:
+    # 03:30 UTC — 05:30 Berlin in summer, 04:30 in winter. GitHub cron has no
+    # timezone support; a half-hour drift across DST is irrelevant here, since
+    # flyers change weekly and the job only needs to run once a day.
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Rebuild the flyer feed
+        run: node scripts/build-flyers.mjs
+
+      - name: Commit if the week changed
+        run: |
+          if git diff --quiet -- data/flyers.json; then
+            echo "Flyer feed unchanged — nothing to commit."
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/flyers.json
+            git commit -m "Refresh weekly flyer feed"
+            git push
+          fi
+
+      # A push made with GITHUB_TOKEN does not trigger other workflows, so this
+      # job publishes the refreshed data itself rather than waiting for the
+      # deploy workflow that will never fire.
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

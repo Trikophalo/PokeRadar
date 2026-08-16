@@ -45,6 +45,8 @@
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Reserved by the Radar/Flyers tab bar; the sheet and modals stop above it. */
+  --tabbar-h: calc(54px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -354,11 +356,20 @@ body.is-booting .shell { opacity: 0; }
 
 /* ----------------------------------------------------------------- sheet --- */
 
-.sheet {
+/* The sheet translates below its own box, so a plain height is not enough to
+   keep it clear of the tab bar — this layer clips it. */
+.sheet-layer {
   position: absolute;
   z-index: 30;
+  inset: 0 0 var(--tabbar-h) 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sheet {
+  position: absolute;
   left: 0; right: 0; top: 0;
   height: 100%;
+  pointer-events: auto;
   display: flex;
   flex-direction: column;
   background: var(--chrome);
@@ -419,7 +430,7 @@ body.is-booting .shell { opacity: 0; }
   padding: 0 12px 4px;
 }
 .sheet__footer {
-  padding: 20px 18px calc(28px + var(--safe-bottom));
+  padding: 20px 18px 28px;
   color: var(--ink-3);
   font-size: 0.75rem;
   text-align: center;
@@ -907,6 +918,7 @@ body.is-booting .shell { opacity: 0; }
 /* ---------------------------------------------------------------- modals --- */
 
 .modal { position: absolute; inset: 0; z-index: 60; }
+.modal__panel--tall > .viewer__stage { flex: 1; }
 .modal__scrim {
   position: absolute;
   inset: 0;
@@ -919,11 +931,11 @@ body.is-booting .shell { opacity: 0; }
 
 .modal__panel {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
-  max-height: 92%;
+  left: 0; right: 0; bottom: var(--tabbar-h);
+  max-height: calc(92% - var(--tabbar-h));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 18px 18px calc(24px + var(--safe-bottom));
+  padding: 18px;
   background: var(--surface);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   box-shadow: var(--shadow-lg);
@@ -932,14 +944,14 @@ body.is-booting .shell { opacity: 0; }
 }
 .modal--open .modal__panel { transform: translateY(0); }
 .modal__panel--tall {
-  height: 92%;
+  height: calc(92% - var(--tabbar-h));
   /* Flex column so the camera stage can claim all height under the header. */
   display: flex;
   flex-direction: column;
 }
 .modal__panel--tall > * { flex: none; }
 .modal__panel--tall > .compose__stage { flex: 1; }
-.modal__panel--short { max-height: 78%; }
+.modal__panel--short { max-height: calc(78% - var(--tabbar-h)); }
 
 /* --------------------------------------------------------------- compose --- */
 
@@ -1013,7 +1025,7 @@ body.is-booting .shell { opacity: 0; }
 .shutter {
   position: absolute;
   left: 50%;
-  bottom: calc(26px + var(--safe-bottom));
+  bottom: 26px;
   transform: translateX(-50%);
   width: 76px; height: 76px;
   padding: 0;
@@ -1129,6 +1141,222 @@ body.is-booting .shell { opacity: 0; }
 .toast--in { opacity: 1; transform: translateY(0) scale(1); }
 .toast--good { background: var(--good); color: #fff; }
 .toast--warn { background: var(--warn); color: #1A1206; }
+
+/* ---------------------------------------------------------------- tabs --- */
+
+.tabbar {
+  position: absolute;
+  z-index: 45;
+  left: 0; right: 0; bottom: 0;
+  height: var(--tabbar-h);
+  padding-bottom: var(--safe-bottom);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--chrome);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-top: 0.5px solid var(--line);
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: none;
+  background: none;
+  color: var(--ink-3);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: color 160ms ease;
+}
+.tab svg {
+  width: 24px; height: 24px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  fill: none;
+  stroke-linecap: round;
+}
+.tab circle:first-child { fill: currentColor; stroke: none; }
+.tab.is-active { color: var(--accent); }
+.tab:active { opacity: 0.6; }
+
+/* --------------------------------------------------------------- flyers --- */
+
+.flyers {
+  position: absolute;
+  z-index: 40;
+  inset: 0 0 var(--tabbar-h) 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.flyers__head {
+  flex: none;
+  padding: calc(14px + var(--safe-top)) 18px 10px;
+  background: var(--bg);
+}
+.flyers__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 750;
+  letter-spacing: -0.028em;
+}
+.flyers__sub { margin: 2px 0 0; font-size: 0.8125rem; color: var(--ink-2); }
+.flyers__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 12px 20px;
+}
+.flyers__list { display: flex; flex-direction: column; gap: 8px; }
+.flyers__candidates { margin-top: 22px; }
+.flyers__candidates-hint {
+  margin: -2px 0 10px;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.flyers__footer {
+  margin-top: 20px;
+  padding: 0 6px;
+  font-size: 0.6875rem;
+  color: var(--ink-3);
+  text-align: center;
+  text-wrap: pretty;
+}
+.flyers__footer p { margin: 0; }
+
+.fcard {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 0.5px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: transform 160ms var(--spring), background 160ms ease;
+}
+.fcard:active { transform: scale(0.985); background: var(--surface-2); }
+.fcard.is-muted { opacity: 0.72; box-shadow: none; }
+
+.fcard__cover {
+  width: 62px;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  background: var(--surface-3) center/cover no-repeat;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.12);
+}
+.fcard__body { min-width: 0; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.fcard__chain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.fcard__dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.fcard__title {
+  font-size: 0.9375rem;
+  font-weight: 620;
+  letter-spacing: -0.011em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fcard__meta { font-size: 0.75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+.fbadge {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.fbadge--auto { background: var(--accent); color: var(--accent-ink); }
+.fbadge--community {
+  background: transparent;
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+/* --------------------------------------------------------------- viewer --- */
+
+.viewer__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+}
+.viewer__page { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.viewer__flag {
+  position: absolute;
+  left: 10px; top: 10px;
+  max-width: calc(100% - 20px);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.viewer__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 0 4px;
+}
+.viewer__count {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  min-width: 56px;
+  text-align: center;
+}
+.viewer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 4px;
+}
+.viewer__note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* The map keeps running underneath; hiding its chrome avoids controls that
+   float over a view they do not belong to. */
+body.is-flyers .chrome--top,
+body.is-flyers .pillbtn--locate,
+body.is-flyers .fab,
+body.is-flyers .sheet-layer,
+/* The map is still live underneath; its attribution belongs to the map, not
+   to a list of flyers, and would otherwise show through over the tab bar. */
+body.is-flyers .maplibregl-control-container { opacity: 0; pointer-events: none; }
 
 /* --------------------------------------------------------------- markers --- */
 /* Injected into the map container by MapLibre, so these live at top level. */

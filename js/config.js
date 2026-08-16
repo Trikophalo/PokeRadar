@@ -92,5 +92,23 @@ export const DEMO = {
   voteTickMs: 9 * 1000,
 };
 
+/**
+ * Flyer radar (PLANNING.md §10). A flyer is hidden until Pokémon has actually
+ * been found in it — either by the keyword pass that runs in the daily job, or
+ * by the community reaching the flag threshold below.
+ */
+export const FLYER_RULES = {
+  /** Independent community flags that make a flyer visible. */
+  communityFindThreshold: 2,
+  /** Karma each confirmed finder earns once the threshold is crossed. */
+  findKarma: 2,
+  /** A flyer whose chain has no branch this close is not shown at all. */
+  maxBranchDistanceM: 25000,
+  /** Written by the daily job; served as a static file. */
+  dataUrl: './data/flyers.json',
+  /** How often a long-lived session re-checks for the day's refresh. */
+  recheckMs: 6 * 60 * 60 * 1000,
+};
+
 export const STORAGE_KEY = 'pokeradar.state.v1';
 export const PREFS_KEY = 'pokeradar.prefs.v1';

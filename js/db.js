@@ -13,7 +13,7 @@
  * permission, they never decide for themselves.
  */
 
-import { RULES, STORAGE_KEY, tierFor } from './config.js';
+import { FLYER_RULES, RULES, STORAGE_KEY, tierFor } from './config.js';
 import { distanceMeters, uid } from './util.js';
 
 const listeners = new Set();
@@ -25,6 +25,7 @@ const emptyState = () => ({
   votes: {},          // key: `${post_id}:${voter_id}` — the composite primary key
   karma_events: [],
   reports: [],        // {post_id, reporter_id, reason, created_at}
+  flyer_finds: {},    // key: `${flyer_id}:${reporter_id}` — §10 community layer
   session: { user_id: null },
   meta: { seeded_at: null, center: null },
 });
@@ -44,7 +45,26 @@ export function load() {
     state = emptyState();
   }
   pruneExpiredPhotos();
+  reconcileFlyerFinds();
   return state;
+}
+
+/**
+ * Pay out any flyer find that crossed the threshold without being awarded.
+ *
+ * The award normally fires on the write that crosses it, but that only covers
+ * finds this client submitted. State can also arrive by other routes — a
+ * restored backup, a replayed offline queue, or (in production) another user's
+ * insert syncing in — and the ledger, not the write path, is the source of
+ * truth. Idempotent: the karma_awarded flag makes re-running it a no-op.
+ */
+function reconcileFlyerFinds() {
+  const before = state.karma_events.length;
+  const flyerIds = new Set(Object.values(state.flyer_finds).map((f) => f.flyer_id));
+  for (const flyerId of flyerIds) awardFlyerFindKarma(flyerId);
+  // Write back, or the payout exists only in memory and is re-derived (and
+  // re-awarded) on the next load.
+  if (state.karma_events.length !== before) persist();
 }
 
 export function reset() {
@@ -394,7 +414,7 @@ export function hasFlaggedSoldOut(postId, userId = state.session.user_id) {
  * cached sum of these rows, which is what makes retractions and moderation
  * reversals exact instead of approximate.
  */
-export function addKarmaEvent(userId, delta, reason, postId = null, voteId = null) {
+export function addKarmaEvent(userId, delta, reason, postId = null, voteId = null, flyerId = null) {
   if (!delta) return;
   const profile = state.profiles[userId];
   if (!profile) return;
@@ -404,6 +424,7 @@ export function addKarmaEvent(userId, delta, reason, postId = null, voteId = nul
     delta,
     reason,
     post_id: postId,
+    flyer_id: flyerId,
     vote_id: voteId || (postId ? voteKey(postId, state.session.user_id) : null),
     created_at: Date.now(),
   };
@@ -460,6 +481,77 @@ export function reportPost(postId, reason) {
   persist();
   emit({ type: 'report', postId });
   return { ok: true, hidden: post.status === 'hidden_pending_review' };
+}
+
+/* ---------------------------------------------------------- flyer finds --- */
+
+const findKey = (flyerId, userId) => `${flyerId}:${userId}`;
+
+export function myFlyerFind(flyerId, userId = state.session.user_id) {
+  if (!userId) return null;
+  return state.flyer_finds[findKey(flyerId, userId)] || null;
+}
+
+/**
+ * Community detection for flyers (§10.2 layer B). Rows are one per
+ * (flyer, reporter): +1 means "Pokémon is on page N", −1 disputes it.
+ */
+export function flyerFindStats(flyerId) {
+  const rows = Object.values(state.flyer_finds).filter((f) => f.flyer_id === flyerId);
+  const found = rows.filter((f) => f.value === 1);
+  const disputed = rows.filter((f) => f.value === -1);
+  const pages = found.map((f) => f.page).filter(Boolean).sort((a, b) => a - b);
+  return {
+    found: found.length,
+    disputed: disputed.length,
+    // Independent flags carry it, but a disputed majority takes it back down.
+    confirmed: found.length >= FLYER_RULES.communityFindThreshold && found.length > disputed.length,
+    page: pages.length ? pages[0] : null,
+  };
+}
+
+export function reportFlyerFind(flyerId, { page = null, value = 1 } = {}) {
+  const user = currentUser();
+  if (!user) return { ok: false, error: 'Sign in to report a flyer find.' };
+  if (value === 1 && !page) return { ok: false, error: 'Which page is it on?' };
+
+  const key = findKey(flyerId, user.id);
+  const existing = state.flyer_finds[key];
+  if (existing && existing.value === value) {
+    delete state.flyer_finds[key];
+    persist();
+    emit({ type: 'flyer:find', flyerId });
+    return { ok: true, retracted: true };
+  }
+
+  state.flyer_finds[key] = {
+    flyer_id: flyerId,
+    reporter_id: user.id,
+    page: value === 1 ? Number(page) : null,
+    value,
+    status: 'pending',
+    karma_awarded: existing?.karma_awarded || false,
+    created_at: existing?.created_at || Date.now(),
+  };
+
+  awardFlyerFindKarma(flyerId);
+  persist();
+  emit({ type: 'flyer:find', flyerId });
+  return { ok: true, stats: flyerFindStats(flyerId) };
+}
+
+/**
+ * Crossing the threshold pays every finder once (§10.2). The karma_awarded flag
+ * is what stops a flyer being farmed by flagging and re-flagging it.
+ */
+function awardFlyerFindKarma(flyerId) {
+  if (!flyerFindStats(flyerId).confirmed) return;
+  for (const row of Object.values(state.flyer_finds)) {
+    if (row.flyer_id !== flyerId || row.value !== 1 || row.karma_awarded) continue;
+    row.karma_awarded = true;
+    row.status = 'confirmed';
+    addKarmaEvent(row.reporter_id, FLYER_RULES.findKarma, 'flyer_find_confirmed', null, null, flyerId);
+  }
 }
 
 /* --------------------------------------------------------------- stores --- */

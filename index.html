@@ -61,7 +61,9 @@
     <span class="fab__label">+</span>
   </button>
 
-  <!-- Persistent sheet: peek / half / full -->
+  <!-- Persistent sheet: peek / half / full. The layer clips it above the tab
+       bar, so sheet content can never sit underneath the tabs. -->
+  <div class="sheet-layer">
   <section id="sheet" class="sheet" aria-label="Sightings">
     <div class="sheet__grabber" role="separator" aria-orientation="horizontal"><span></span></div>
     <header class="sheet__head">
@@ -79,6 +81,51 @@
       </footer>
     </div>
   </section>
+  </div>
+
+  <!-- Flyer radar (PLANNING.md §10) — the first view that is not a sheet -->
+  <section id="flyers-view" class="flyers" hidden aria-label="Weekly flyers">
+    <header class="flyers__head">
+      <h1 class="flyers__title">Flyers</h1>
+      <p class="flyers__sub"><span id="flyers-week">This week</span> · <span id="flyers-count">—</span></p>
+    </header>
+    <div class="flyers__scroll">
+      <div id="flyers-list" class="flyers__list"></div>
+      <section id="flyers-candidates" class="flyers__candidates" hidden>
+        <h2 class="section-title">All current flyers</h2>
+        <p class="flyers__candidates-hint">Nothing found in these yet. Spot Pokémon in one? Report the page — two independent reports put it on the list and earn you karma.</p>
+        <div id="flyers-candidate-list" class="flyers__list"></div>
+      </section>
+      <footer class="flyers__footer">
+        <p id="flyers-notice"></p>
+      </footer>
+    </div>
+  </section>
+
+  <nav class="tabbar" role="tablist" aria-label="Sections">
+    <button class="tab is-active" type="button" role="tab" data-tab="radar" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.2" />
+        <circle cx="12" cy="12" r="7.6" fill="none" />
+        <circle cx="12" cy="12" r="11" fill="none" />
+      </svg>
+      <span>Radar</span>
+    </button>
+    <button class="tab" type="button" role="tab" data-tab="flyers" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="3" width="16" height="18" rx="2.4" fill="none" />
+        <line x1="7.5" y1="8" x2="16.5" y2="8" />
+        <line x1="7.5" y1="12" x2="16.5" y2="12" />
+        <line x1="7.5" y1="16" x2="13" y2="16" />
+      </svg>
+      <span>Flyers</span>
+    </button>
+  </nav>
+
+  <div id="viewer-modal" class="modal" hidden>
+    <div class="modal__scrim"></div>
+    <div class="modal__panel modal__panel--tall" role="dialog" aria-modal="true" aria-label="Flyer pages"></div>
+  </div>
 
   <div id="compose-modal" class="modal" hidden>
     <div class="modal__scrim"></div>

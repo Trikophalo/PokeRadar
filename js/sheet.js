@@ -20,9 +20,12 @@ export class Sheet {
     this.state = 'peek';
     this.dragging = false;
 
-    // Measure the shell, not the window: on desktop the app renders inside a
-    // phone-sized frame, and the snap points have to follow that box.
-    this.height = () => this.root.parentElement?.clientHeight || window.innerHeight;
+    // Measure the sheet's own box, not the window: on desktop the app renders
+    // inside a phone-sized frame, and the sheet stops above the tab bar — the
+    // snap points have to follow that box, not the viewport.
+    this.height = () => this.root.clientHeight
+      || this.root.parentElement?.clientHeight
+      || window.innerHeight;
     this.offsetFor = (snap) => Math.round(this.height() * (1 - SNAP_FRACTIONS[snap]));
 
     this.bindDrag();
@@ -35,7 +38,9 @@ export class Sheet {
    * Without this the + button sits underneath the sheet the moment it opens.
    */
   syncChrome(offset, snap = this.state) {
-    const shell = this.root.parentElement;
+    // The shell, not the immediate parent — the sheet now sits inside a
+    // clipping layer, and the floating chrome reads these off the shell.
+    const shell = this.root.closest('.shell');
     if (!shell) return;
     shell.style.setProperty('--sheet-top', `${offset}px`);
     shell.dataset.sheet = snap;
@@ -48,15 +53,31 @@ export class Sheet {
     this.root.style.transform = `translate3d(0, ${offset}px, 0)`;
     this.root.dataset.snap = snap;
     this.syncChrome(offset, snap);
-    // Only the fully-open sheet scrolls its content; below that the drag owns
-    // the gesture, which is what stops the sheet fighting the list.
-    this.scroller.style.overflowY = snap === 'full' ? 'auto' : 'hidden';
-    if (snap !== 'full') this.scroller.scrollTop = 0;
+    // Half and full both scroll: at half, a post's action row sits below the
+    // fold, and making the user drag to full just to reach Confirm is friction
+    // for no gain. Peek shows only the header, so it stays locked.
+    this.scroller.style.overflowY = snap === 'peek' ? 'hidden' : 'auto';
+    if (snap === 'peek') this.scroller.scrollTop = 0;
+    this.fitScroller(offset);
 
     if (immediate) {
       requestAnimationFrame(() => this.root.classList.remove('sheet--immediate'));
     }
     this.onSnap?.(snap);
+  }
+
+  /**
+   * The sheet is positioned by translating a full-height box downwards, so its
+   * scroll container runs off the bottom of the screen. Left alone, the browser
+   * believes content down there is "in view" and refuses to scroll to it —
+   * which strands anything below the fold at the half snap. Cap the scroller at
+   * the height that is genuinely on screen.
+   */
+  fitScroller(offset) {
+    const chrome = (this.grabber?.offsetHeight || 0)
+      + (this.root.querySelector('.sheet__head')?.offsetHeight || 0);
+    const visible = this.height() - offset - chrome;
+    this.scroller.style.maxHeight = `${Math.max(0, visible)}px`;
   }
 
   bindDrag() {
@@ -67,8 +88,9 @@ export class Sheet {
     const canStartDrag = (event) => {
       if (this.grabber.contains(event.target)) return true;
       if (event.target.closest('button, a, input, textarea, select, .no-drag')) return false;
-      // From the content area, only take over the gesture at the top of scroll.
-      return this.state !== 'full' || this.scroller.scrollTop <= 0;
+      // From the content area, only take over the gesture at the top of scroll —
+      // otherwise the sheet fights the list it is showing.
+      return this.state === 'peek' || this.scroller.scrollTop <= 0;
     };
 
     const onDown = (event) => {
@@ -78,7 +100,7 @@ export class Sheet {
       startOffset = this.currentOffset();
       this.dragging = true;
       this.root.classList.add('sheet--dragging');
-      this.root.parentElement?.classList.add('is-dragging-sheet');
+      this.root.closest('.shell')?.classList.add('is-dragging-sheet');
       this.root.setPointerCapture?.(pointerId);
     };
 
@@ -96,7 +118,7 @@ export class Sheet {
       if (!this.dragging || event.pointerId !== pointerId) return;
       this.dragging = false;
       this.root.classList.remove('sheet--dragging');
-      this.root.parentElement?.classList.remove('is-dragging-sheet');
+      this.root.closest('.shell')?.classList.remove('is-dragging-sheet');
       this.root.releasePointerCapture?.(pointerId);
 
       const offset = this.currentOffset();

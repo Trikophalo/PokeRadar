@@ -7,7 +7,7 @@
  * next load rather than after a hard refresh.
  */
 
-const VERSION = 'pokeradar-v1';
+const VERSION = 'pokeradar-v2';
 const SHELL = [
   './',
   './index.html',
@@ -24,6 +24,9 @@ const SHELL = [
   './js/sheet.js',
   './js/compose.js',
   './js/ui.js',
+  './js/flyers.js',
+  './js/flyerview.js',
+  './js/flyerart.js',
   './vendor/maplibre/maplibre-gl.js',
   './vendor/maplibre/maplibre-gl.css',
 ];
@@ -51,6 +54,23 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;   // tiles and other hosts pass through
+
+  // The flyer feed is rewritten daily — always try the network first, or the
+  // tab would keep serving last week's flyers from the cache.
+  if (url.pathname.includes('/data/')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(VERSION).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request)),
+    );
+    return;
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(

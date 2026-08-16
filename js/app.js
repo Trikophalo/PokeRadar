@@ -11,6 +11,8 @@ import { ComposeFlow } from './compose.js';
 import { RadarMap } from './map.js';
 import { ModalSheet, Sheet } from './sheet.js';
 import { DemoHeartbeat, generateStores, seedWorld } from './seed.js';
+import * as flyers from './flyers.js';
+import { FlyerViewer, renderFlyers } from './flyerview.js';
 import {
   avatarEl, renderFeed, renderPostDetail, renderProfile, toast, updateComposeButton,
 } from './ui.js';
@@ -25,6 +27,7 @@ const app = {
   center: null,
   userLocation: null,
   mode: 'feed',        // 'feed' | 'detail'
+  tab: 'radar',        // 'radar' | 'flyers'
   selectedPostId: null,
   heartbeat: null,
 };
@@ -148,6 +151,13 @@ async function boot() {
   wireChrome();
   startHeartbeat();
 
+  // The flyer feed is a static file written by the daily job — load it in the
+  // background so the map is never waiting on it.
+  flyers.loadFlyers().then(() => { if (app.tab === 'flyers') paintFlyers(); });
+  setInterval(() => flyers.loadFlyers().then(() => {
+    if (app.tab === 'flyers') paintFlyers();
+  }), 60 * 60 * 1000);
+
   db.subscribe(() => { refresh(); });
   refresh();
   setInterval(refresh, 15000);           // sweeps expired sightings off the map
@@ -203,6 +213,46 @@ function wireChrome() {
   });
 
   $('#sheet-back').addEventListener('click', showFeed);
+
+  for (const tab of document.querySelectorAll('.tab')) {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  }
+}
+
+/**
+ * §10.6: the flyer tab is the first view that is not a sheet over the map, so
+ * the map chrome steps aside entirely rather than layering.
+ */
+function switchTab(tab) {
+  if (app.tab === tab) return;
+  app.tab = tab;
+  const onFlyers = tab === 'flyers';
+
+  document.body.classList.toggle('is-flyers', onFlyers);
+  $('#flyers-view').hidden = !onFlyers;
+  for (const node of document.querySelectorAll('.tab')) {
+    const active = node.dataset.tab === tab;
+    node.classList.toggle('is-active', active);
+    node.setAttribute('aria-selected', String(active));
+  }
+
+  if (onFlyers) {
+    paintFlyers();
+    flyers.loadFlyers().then(paintFlyers);
+  } else {
+    // The map was hidden while the tab was away; MapLibre needs to re-measure.
+    requestAnimationFrame(() => app.map?.map.resize());
+  }
+  haptic(6);
+}
+
+function paintFlyers() {
+  renderFlyers({
+    stores: app.stores,
+    origin: app.userLocation || app.center,
+    onOpen: (flyerId) => flyerViewer.open(flyerId),
+    onRequireAuth: openAuth,
+  });
 }
 
 function paintThemeToggle() {
@@ -231,6 +281,8 @@ function refresh() {
   app.map?.render(posts);
   paintAccount();
   updateComposeButton($('#fab'));
+
+  if (app.tab === 'flyers') paintFlyers();
 
   if (app.mode === 'detail' && app.selectedPostId) {
     const post = db.getPost(app.selectedPostId);
@@ -298,6 +350,14 @@ const profileModal = new ModalSheet($('#profile-modal'));
 const authModal = new ModalSheet($('#auth-modal'));
 const composeModal = new ModalSheet($('#compose-modal'));
 
+const viewerModal = new ModalSheet($('#viewer-modal'));
+const flyerViewer = new FlyerViewer(viewerModal, {
+  getStores: () => app.stores,
+  getOrigin: () => app.userLocation || app.center,
+  onChanged: () => { paintFlyers(); refresh(); },
+  onRequireAuth: openAuth,
+});
+
 const compose = new ComposeFlow(composeModal, {
   getLocation: () => app.userLocation,
   getStores: () => app.stores,
@@ -336,7 +396,12 @@ function openProfile(userId) {
   profileModal.open();
 }
 
-function openAuth() {
+/**
+ * `onSuccess` matters when auth is raised from on top of another view — the
+ * flyer viewer stays open behind the sheet, and needs to re-render as signed in
+ * rather than leaving a stale, still-gated button.
+ */
+function openAuth(onSuccess) {
   const panel = authModal.panel;
   clear(panel);
 
@@ -356,6 +421,7 @@ function openAuth() {
     authModal.close();
     toast(`Welcome, ${result.profile.username}.`, { tone: 'good' });
     refresh();
+    if (typeof onSuccess === 'function') onSuccess();
   };
 
   panel.append(
