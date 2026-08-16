@@ -317,3 +317,79 @@ map + live photo markers with countdown rings · camera-first post flow with sto
 | Voting window | Votable 6 h from capture (outlives the 1-h marker). |
 | Karma formula | ±1 symmetric, ±25/post cap, −20 fake penalty, probation exclusion; ledger-based. |
 | App name | Treat "PokeRadar" as a working title pending trademark advice. |
+
+---
+
+## 10. Extension: the flyer radar (weekly Prospekte)
+
+*Added after the v1 plan. Status: planned, not built.*
+
+The map answers "what is on a shelf **right now**"; weekly flyers answer "what will be on a shelf **this week**." German retail runs on Prospekte — REWE, EDEKA, Müller, Rossmann, Kaufland all publish weekly — and a Pokémon listing in a flyer is the single best predictor of a restock event. A second tab that shows **only the current flyers in which Pokémon products actually appear, sorted by distance**, turns PokeRadar from a live feed into a planning tool, and it feeds the map: a flyer listing on Monday is why reporters go hunting on Thursday.
+
+### 10.1 The hard problem first: getting the flyers
+
+There is **no official, public, free API** from REWE, EDEKA, or any major German chain for flyer content. Everything else in this section is downstream of that fact. The realistic routes:
+
+| route | how it works | pros | cons |
+|---|---|---|---|
+| **Aggregator API partnership** (Bonial/kaufDA · Offerista · Marktguru) | Aggregators license flyer content from retailers and expose commercial APIs with flyer metadata, page images, validity windows, regional editions, and — critically — **offer-level search** | Legally clean; regionalisation solved; keyword search over offers ("Pokémon") is exactly our filter; one integration covers many chains | Commercial contract needed; cost unknown until asked; dependency on one partner |
+| **Retailer-site crawling** | A daily job reads each chain's public flyer index (viewer URLs, validity dates, regional selection by zip), optionally OCRs the PDF pages | No partner needed; full control | Fragile (breaks on redesigns); ToS/copyright-sensitive — flyer content is licensed material; regional editions (EDEKA alone has seven regional cooperatives) multiply the work |
+| **Deep-link / embed official viewers** | We store only metadata and open the retailer's own flyer viewer (their page, their servers) | Legally the safest display layer — we never re-host content | Display only; solves neither discovery nor the Pokémon filter by itself |
+
+**Recommendation: hybrid.** Use an aggregator's licensed API as the data source (start the Bonial/Offerista/Marktguru conversations early — this is the feature's long lead item), display via deep links into official viewers wherever possible, and store only metadata plus low-res cover thumbnails ourselves. If no aggregator deal materialises at acceptable cost, the fallback is metadata-only crawling + deep links + community detection (10.2, layer B alone) — legally reviewed first. **Do not build on unofficial app APIs** (reverse-engineered REWE/Marktguru endpoints); they work until they don't, and production cannot sit on that.
+
+### 10.2 "Only flyers where Pokémon was actually found" — three detection layers
+
+A flyer is **hidden by default** and becomes visible in the tab only when a detection layer marks it:
+
+- **A — Offer-keyword match (automatic, primary).** Aggregator APIs index individual offers per flyer. The daily job searches each new flyer's offers for `pokémon / pokemon / sammelkarten / trading cards / karmesin` etc. A hit records flyer, page number, and matched term → the flyer is shown with a "Pokémon · p. 12" badge that opens the viewer on that page.
+- **B — Community finds (the PokeRadar way).** A "Report a flyer find" action lists this week's not-yet-matched flyers; a user flags "Pokémon on page 8." At **2 independent flags** the flyer goes visible with a "community-found" badge, and confirmed finders earn **+2 karma** through the existing ledger (`reason: flyer_find_confirmed`, capped like everything else). This also catches what keyword search misses — image-only listings, bundle deals, misspellings.
+- **C — OCR sweep (v2 fallback).** For chains outside the aggregator's coverage: daily OCR over flyer pages, same keyword list. Only worth building if coverage gaps prove real.
+
+Visibility rule, precisely: `visible = ∃ match(layer A or C) OR confirmed_community_finds ≥ 2`, always `AND valid_until ≥ today`.
+
+### 10.3 Data model additions
+
+**`flyers`** — one regional edition per row: `id`, `chain`, `region_code`, `title`, `valid_from`, `valid_until`, `viewer_url` (official), `thumbnail_url` (low-res, ours), `page_count`, `source` (`aggregator / crawler / manual`), `fetched_at`.
+**`flyer_matches`** — detection results: `flyer_id`, `page`, `term`, `method` (`offer_api / ocr / manual`), `created_at`.
+**`flyer_finds`** — community layer: `flyer_id`, `reporter_id`, `page`, `note`, `status` (`pending / confirmed / rejected`), unique `(flyer_id, reporter_id)`; feeds `karma_events` on confirmation.
+
+### 10.4 Refresh pipeline — "once a day" made concrete
+
+One scheduled job, **05:30 Europe/Berlin daily** (pg_cron → edge function):
+
+1. For each tracked chain × region: fetch the current flyer list; upsert `flyers` (new editions appear on different weekdays per chain — Sunday/Monday flips dominate, but daily polling is what guarantees "always current").
+2. Run layer-A detection on anything new or changed; write `flyer_matches`.
+3. Expire: anything with `valid_until < today` disappears from queries (same query-time-filter pattern as post expiry — never a hard delete during the karma-relevant window).
+4. On-demand nudge: the first community find on a hidden flyer triggers a one-off re-check of that flyer, so layer A gets a second chance before the community threshold decides.
+
+Clients just read; no client-side fetching of retailer content, ever (CORS, keys, and copyright all live server-side).
+
+### 10.5 Location sorting & regional editions
+
+Sort key: **distance from the user to the nearest branch of the flyer's chain** (the `stores` registry from §3 — now promoted from v1.5 to a hard dependency of this feature), tiebreak by `valid_until` (soonest-expiring first, mirroring the map's freshness bias). Regional editions are resolved by the user's coordinates → zip → edition, which aggregator APIs handle natively; this is another reason the aggregator route wins. A flyer with no branch inside ~25 km doesn't appear at all.
+
+### 10.6 UX — the app grows a tab bar
+
+This is the first feature that breaks the "everything is a sheet over the map" model, so navigation changes deliberately: a minimal bottom **tab bar: Radar · Flyers** (profile stays in the top chrome). The Flyers tab:
+
+- Large-title list, "This week", cards: cover thumbnail, chain + edition, "valid until Sat", distance to nearest branch, and the find badge — red "Pokémon · p. 12" (auto) or outlined "community find · p. 8".
+- Tap → official viewer deep-linked to the matched page (in-app browser sheet); actions on the card: **Confirm find / Dispute** (same 👍/👎 grammar as posts, feeding find status), **Directions** to the nearest branch, share.
+- Empty state does the marketing: "No Pokémon in this week's flyers yet — first confirmed find earns +2 karma."
+- A quiet secondary list ("All current flyers") hosts the layer-B reporting flow without polluting the main tab.
+
+### 10.7 Prototype path on GitHub Pages
+
+The static prototype cannot call retailer or aggregator APIs from the browser — CORS, credentials, and licensing all forbid it. But the **daily job maps perfectly onto a scheduled GitHub Action**: a cron workflow runs at 05:30, executes the fetch/detect pipeline, writes `data/flyers.json` + thumbnails into the repo, commits, and Pages serves the result as static files the app reads. That is a legitimate architecture up to real scale, not just a demo trick — though until a data agreement exists, the prototype ships **clearly-labelled simulated flyers** through the same `flyers.json` contract, so the UI is real while the pipeline awaits a licensed source.
+
+### 10.8 Decisions to lock for this feature
+
+| decision | recommendation |
+|---|---|
+| Data source | Aggregator API (approach Bonial/Offerista/Marktguru now); deep-link display; no unofficial APIs in production. |
+| Visibility rule | Hidden until layer-A match or ≥2 community finds; always validity-bounded. |
+| Community reward | +2 karma per confirmed flyer find, through the existing ledger and caps. |
+| Refresh | Daily 05:30 Europe/Berlin server-side job; clients never fetch retailer content. |
+| Sorting | Nearest-branch distance, tiebreak by soonest expiry; 25 km visibility radius. |
+| Navigation | Introduce the two-item tab bar (Radar · Flyers) rather than burying flyers in a sheet. |
+| Legal | Flyer content is licensed material — legal review before any crawling/re-hosting ships. |
