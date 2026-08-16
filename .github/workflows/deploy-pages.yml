@@ -32,13 +32,13 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      # enablement turns Pages on via the API using the pages:write permission
-      # above, so a fresh clone of this repo deploys without anyone having to
-      # visit Settings first.
+      # Pages has to be switched on once by a repository admin — the Actions
+      # token cannot create the site itself ("Resource not accessible by
+      # integration"), so `enablement: true` does not help here. Until someone
+      # sets Settings → Pages → Source to "GitHub Actions", this step fails
+      # with a message saying exactly that.
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3

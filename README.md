@@ -4,6 +4,8 @@ A live map of Pokémon merchandise restocks in physical stores. Someone spots pr
 
 **[Open the live demo →](https://trikophalo.github.io/PokeRadar/)** · **[Read the architecture plan →](PLANNING.md)**
 
+> **First-time setup:** GitHub Pages has to be switched on once by a repository admin before that link resolves — see [Deploying](#deploying). The Actions token is not allowed to create the Pages site on its own.
+
 ---
 
 ## What this repository contains
@@ -42,10 +44,10 @@ It must be served over `http://` or `https://` rather than opened as a `file://`
 
 ## Deploying
 
-The site is static files at the repository root, so either Pages mode works:
+Pages must be enabled once by hand — GitHub does not let a workflow's own token create the Pages site. After that, either mode works, because the site is plain static files at the repository root:
 
-- **Deploy from a branch** — Settings → Pages → Source: *Deploy from a branch*, then pick this branch and the `/ (root)` folder. Nothing else to configure.
-- **GitHub Actions** — Settings → Pages → Source: *GitHub Actions*. `.github/workflows/deploy-pages.yml` uploads the repository and publishes it on every push.
+- **Deploy from a branch** (simplest) — Settings → Pages → Source: *Deploy from a branch*, then pick `claude/pokeradar-app-planning-d769co` and the `/ (root)` folder. It publishes straight away; no Actions run involved.
+- **GitHub Actions** — Settings → Pages → Source: *GitHub Actions*. `.github/workflows/deploy-pages.yml` then uploads the repository and publishes it on every push. Re-run the latest workflow once after switching, since the runs before Pages existed will have failed at the configure step.
 
 `.nojekyll` is present so Pages serves the files as-is.
 
