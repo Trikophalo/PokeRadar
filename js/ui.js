@@ -8,7 +8,8 @@
 
 import { RULES, tierFor, nextTierFor } from './config.js';
 import * as db from './db.js';
-import { photoFor } from './seed.js';
+import { photoFor } from './db.js';
+import { deriveScout } from './xp.js';
 import {
   clear, el, escapeHtml, formatAgo, formatCountdown, formatDistance,
   formatRemaining, distanceMeters, haptic,
@@ -120,7 +121,7 @@ export function renderFeed(container, { origin, onTapPost }) {
     container.append(el('div', { class: 'empty' }, [
       el('div', { class: 'empty__glyph', text: '📡' }),
       el('p', { class: 'empty__title', text: 'No sightings nearby' }),
-      el('p', { class: 'empty__body', text: 'Nothing on the radar in the last hour. Be the first to report a restock in your area.' }),
+      el('p', { class: 'empty__body', text: 'Nothing on the radar in the last hour. Be the first radar in your area — first finds at a store earn bonus XP and a star on the marker.' }),
     ]));
     return;
   }
@@ -173,6 +174,9 @@ export function renderPostDetail(container, postId, ctx) {
       el('span', { text: post.store_name || 'Unknown location' }),
       distance !== null ? el('span', { class: 'detail__distance', text: ` · ${formatDistance(distance)} away` }) : null,
     ]),
+    db.isFirstScout(post)
+      ? el('p', { class: 'detail__first', text: '★ First find at this store today' })
+      : null,
     el('p', { class: 'detail__timing' }, [
       el('span', { text: `posted ${formatAgo(Date.now() - post.captured_at)}` }),
       el('span', { class: 'detail__dot', text: '·' }),
@@ -384,6 +388,9 @@ export function renderProfile(container, userId, ctx) {
   );
 
   if (isMe) {
+    const scout = deriveScout(userId);
+    container.append(scoutSectionEl(scout));
+
     const today = db.karmaToday(userId);
     container.append(el('div', { class: 'ledger' }, [
       el('span', { class: 'ledger__label', text: 'Your ledger today' }),
@@ -429,8 +436,8 @@ export function renderProfile(container, userId, ctx) {
           class: 'linkbtn', type: 'button', text: 'Sign out',
           onclick: () => ctx.onSignOut?.(),
         })),
-        settingsRow('Demo data', el('button', {
-          class: 'linkbtn linkbtn--danger', type: 'button', text: 'Reset everything',
+        settingsRow('Stored data', el('button', {
+          class: 'linkbtn linkbtn--danger', type: 'button', text: 'Reset app data',
           onclick: () => ctx.onResetDemo?.(),
         })),
       ]),
@@ -443,6 +450,45 @@ function settingsRow(label, control) {
     el('span', { class: 'settings__label', text: label }),
     control || null,
   ]);
+}
+
+/**
+ * The Scout block (§12): level + XP progress, the weekly streak, and the badge
+ * case. Sits apart from the karma ring on purpose — trust above, activity here.
+ */
+function scoutSectionEl(scout) {
+  const wrap = el('div', { class: 'scout' });
+
+  const streak = scout.streakWeeks > 0
+    ? el('span', { class: 'scout__streak', text: `🔥 ${scout.streakWeeks}-week streak` })
+    : el('span', { class: 'scout__streak is-idle', text: 'No streak yet — one sighting this week starts it' });
+
+  wrap.append(
+    el('div', { class: 'scout__head' }, [
+      el('div', {}, [
+        el('div', { class: 'scout__level', text: scout.levelName }),
+        el('div', { class: 'scout__xp', text: scout.nextLevelXp
+          ? `${scout.xp} XP · ${scout.nextLevelXp - scout.xp} to ${scout.nextLevelName}`
+          : `${scout.xp} XP · top level` }),
+      ]),
+      el('span', { class: 'scout__ln', text: `Lv ${scout.level}` }),
+    ]),
+    (() => {
+      const bar = el('div', { class: 'scout__bar' }, [el('div', { class: 'scout__fill' })]);
+      bar.querySelector('.scout__fill').style.width = `${Math.round(scout.progress * 100)}%`;
+      return bar;
+    })(),
+    streak,
+    el('div', { class: 'scout__badges' }, scout.badges.map((badge) =>
+      el('div', {
+        class: `sbadge ${badge.earned ? 'is-earned' : ''}`,
+        title: badge.desc,
+      }, [
+        el('span', { class: 'sbadge__name', text: badge.name }),
+        el('span', { class: 'sbadge__desc', text: badge.desc }),
+      ]))),
+  );
+  return wrap;
 }
 
 /** Karma inside a progress ring toward the next tier (§4 "Display"). */

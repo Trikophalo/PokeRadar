@@ -1,16 +1,17 @@
 /**
  * PokeRadar — application wiring.
  *
- * Boot order: restore state → resolve a map centre → make sure the world has
- * sightings in it → bring up the map, the sheet and the compose flow.
+ * Boot order: restore state → resolve a map centre → bring up the map, the
+ * sheet and the compose flow → connect live sync so other people's sightings
+ * stream in.
  */
 
-import { DEMO, FALLBACK_CENTER, PREFS_KEY, RULES } from './config.js';
+import { FALLBACK_CENTER, PREFS_KEY } from './config.js';
 import * as db from './db.js';
+import * as sync from './sync.js';
 import { ComposeFlow } from './compose.js';
 import { RadarMap } from './map.js';
 import { ModalSheet, Sheet } from './sheet.js';
-import { DemoHeartbeat, generateStores, seedWorld } from './seed.js';
 import * as flyers from './flyers.js';
 import { FlyerViewer, renderFlyers } from './flyerview.js';
 import {
@@ -29,7 +30,6 @@ const app = {
   mode: 'feed',        // 'feed' | 'detail'
   tab: 'radar',        // 'radar' | 'flyers'
   selectedPostId: null,
-  heartbeat: null,
 };
 
 /* ----------------------------------------------------------------- prefs --- */
@@ -117,16 +117,7 @@ async function boot() {
   app.center = center;
   if (center.precise) app.userLocation = center;
 
-  app.stores = generateStores(center);
-
-  // Reseed when the visitor is somewhere else entirely — a map full of
-  // sightings 400 km away is worse than no map at all.
-  const meta = db.raw().meta;
-  const movedFar = meta.center && distanceMeters(meta.center, center) > 25000;
-  if (!meta.seeded_at || movedFar || db.activePosts().length === 0) {
-    if (movedFar) resetWorldPosts();
-    seedWorld(center);
-  }
+  app.stores = db.learnedStores();
 
   app.map = new RadarMap($('#map'), {
     center,
@@ -149,7 +140,7 @@ async function boot() {
   });
 
   wireChrome();
-  startHeartbeat();
+  startSync();
 
   // The flyer feed is a static file written by the daily job — load it in the
   // background so the map is never waiting on it.
@@ -172,12 +163,7 @@ async function boot() {
   window.__pokeradar = { app, db };
 }
 
-function resetWorldPosts() {
-  const state = db.raw();
-  for (const [id, post] of Object.entries(state.posts)) {
-    if (post.is_demo_seed) delete state.posts[id];
-  }
-}
+
 
 /* ---------------------------------------------------------------- chrome --- */
 
@@ -194,6 +180,10 @@ function wireChrome() {
     } else {
       toast('Location unavailable — allow access to centre the map on you.', { tone: 'warn' });
     }
+  });
+
+  $('#sync-status').addEventListener('click', () => {
+    toast($('#sync-status').title || 'Live sync');
   });
 
   $('#theme-toggle').addEventListener('click', () => {
@@ -278,6 +268,7 @@ function paintAccount() {
 
 function refresh() {
   const posts = db.activePosts();
+  app.stores = db.learnedStores();
   app.map?.render(posts);
   paintAccount();
   updateComposeButton($('#fab'));
@@ -379,7 +370,7 @@ function openProfile(userId) {
       refresh();
     },
     onResetDemo: () => {
-      if (!confirm('Reset all demo data — sightings, karma and your account?')) return;
+      if (!confirm('Delete everything stored on this device — your account, karma and sightings?')) return;
       db.reset();
       profileModal.close();
       location.reload();
@@ -437,7 +428,7 @@ function openAuth(onSuccess) {
       error,
       el('button', { class: 'btn btn--primary btn--full', type: 'button', text: 'Continue', onclick: submit }),
       el('p', { class: 'auth__note', text:
-        'Demo build: accounts live in this browser only. The production app signs in with Apple, Google or email.' }),
+        'Prototype: your account lives on this device. Sign in with Apple, Google or email arrives with the real backend.' }),
     ]),
   );
 
@@ -467,12 +458,37 @@ function openReport(postId) {
 
 /* --------------------------------------------------------------- heartbeat --- */
 
-function startHeartbeat() {
-  app.heartbeat = new DemoHeartbeat({
-    stores: app.stores,
-    onNewPost: () => { /* db.emit already drives the re-render */ },
+/**
+ * Live sync: your posts go out, everyone else's come in. The pill in the top
+ * chrome mirrors the connection so "why is the map quiet" is answerable at a
+ * glance. Incoming sightings announce themselves — that moment is the radar.
+ */
+function startSync() {
+  sync.init({
+    onStatus: paintSyncStatus,
+    onRemotePost: (post) => {
+      const origin = app.userLocation || app.center;
+      const km = origin ? distanceMeters(origin, post) / 1000 : null;
+      const where = post.store_name || 'a store';
+      toast(km !== null && km <= 50
+        ? `New sighting nearby: ${post.title} · ${where}`
+        : `New sighting: ${post.title} · ${where}`, { tone: 'good' });
+      haptic([8, 30, 8]);
+    },
   });
-  app.heartbeat.start();
+  sync.start();
+  paintSyncStatus(sync.currentStatus());
+}
+
+function paintSyncStatus(state) {
+  const pill = $('#sync-status');
+  if (!pill) return;
+  pill.dataset.state = state;
+  const label = { live: 'Live — sightings sync in real time',
+    connecting: 'Connecting to live sync…',
+    offline: 'Live sync unreachable — posts stay on this device until it returns' }[state] || state;
+  pill.setAttribute('aria-label', label);
+  pill.title = label;
 }
 
 /* -------------------------------------------------------------------- misc --- */

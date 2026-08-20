@@ -14,7 +14,7 @@ Two things, and it is worth being clear about which is which.
 
 **`PLANNING.md` is the product and architecture plan** — the real design: React Native (Expo) + Supabase/PostGIS + Mapbox, the data model, the karma rules, the anti-abuse strategy, the roadmap. That document is the specification.
 
-**Everything else is a working web prototype of that plan**, built to run on GitHub Pages so the concept can be used rather than just read. It is a real application — real map, real camera, real geolocation, real rules — with one substitution: the Supabase backend is replaced by a browser-local data layer that mirrors the planned schema. Nothing is a mockup or a click-through; every screen is driven by live state.
+**Everything else is a working web prototype of that plan**, built to run on GitHub Pages so the concept can be used rather than just read. It is a real application — real map, real camera, real geolocation, real rules, and **real cross-user live sync**: sightings, votes and sold-out flags travel between everyone with the app open, over a public pub/sub broker (ntfy.sh) that stands in for Supabase Realtime. The Supabase database itself is replaced by a browser-local data layer that mirrors the planned schema. Nothing is a mockup or a click-through; every screen is driven by live state.
 
 ## What actually works
 
@@ -25,11 +25,12 @@ Two things, and it is worth being clear about which is which.
 - **Karma as an append-only ledger** with tiers, per-post caps, and probation for new accounts — vote retraction reverses the ledger exactly.
 - **The 10-minute rate limit**, enforced in the data layer and surfaced as a countdown ring on the + button rather than a dead control.
 - **Profile and karma view** — progress ring toward the next tier, accuracy stat, post history, private ledger.
+- **Live cross-user sync** — post a sighting and everyone with the app open sees the marker drop within seconds, photo included; their confirms, disputes and sold-out flags flow back to you. A status dot in the top chrome shows the connection. The §6 rules cross the wire intact: incoming envelopes are validated and clamped, probation still voids karma, and rate limits still hold.
+- **Store names learned from the community** — no seeded store list. Posting offers nearby known stores as one-tap chips, plus free-text entry with typing assistance (chains + every store the community has already named). A manually entered store becomes a suggestion for everyone once the post syncs.
+- **The Scout system** — a second currency beside karma. Karma stays pure trust; XP pays instantly for activity: posting, first finds at a store (⭐ on the marker), confirms received, judging others, flyer finds, weekly posting streaks. Nine levels, eight badges, and a progress bar on the profile. XP buys no reach — levels are identity, not power.
 - **Light and dark themes**, including a dark basemap; installable as a PWA; works offline after first load.
 
-A simulated community keeps the map populated: seeded reporters, stores generated around wherever you open the map, and a heartbeat that drops in new sightings while you watch. That heartbeat is what stands in for Supabase Realtime.
-
-The product photography is drawn procedurally in the browser — original geometric packaging, not copyrighted product shots and not a third-party image host.
+There is no simulated community any more — the map starts honestly empty and fills with real posts.
 
 ## Running it locally
 
@@ -62,8 +63,8 @@ js/map.js               MapLibre setup, photo markers, countdown rings, clusteri
 js/sheet.js             the bottom sheet with peek/half/full snap points
 js/compose.js           camera capture and the post creation flow
 js/ui.js                view rendering — cards, detail, profile, karma ring
-js/seed.js              the simulated community and its heartbeat
-js/imagery.js           procedural product photography
+js/sync.js              live cross-user sync over a public pub/sub broker
+js/xp.js                the Scout system — XP, levels, streaks, badges (derived)
 vendor/maplibre/        MapLibre GL JS 5.24.0, vendored (BSD-3-Clause)
 ```
 
@@ -78,7 +79,7 @@ The prototype was written so that the substitution is mechanical rather than a r
 | `db.js` over `localStorage` | Supabase Postgres + PostGIS, same tables |
 | Rules enforced in mutators | Row-level security and `BEFORE INSERT` triggers |
 | `activePosts()` filter | `posts_in_bbox()` RPC with a GIST index |
-| `DemoHeartbeat` | Supabase Realtime subscriptions |
+| `sync.js` over ntfy.sh | Supabase Realtime subscriptions |
 | Photos as data URLs | Supabase Storage with CDN thumbnail transforms |
 | Local username sign-in | Sign in with Apple / Google / email |
 | MapLibre + keyless OSM tiles | Mapbox (swap the style object in `config.js`) |
@@ -87,7 +88,7 @@ The prototype was written so that the substitution is mechanical rather than a r
 
 It is a prototype, and these are deliberate rather than overlooked:
 
-- **Data is per-browser.** There is no server, so sightings you post are visible only to you. Two people opening the demo see separate worlds.
+- **Sync is best-effort.** Sightings and votes sync live over a public, unauthenticated broker topic: anyone can read it (sightings are public by design), photos are recompressed hard for the wire, and consistency converges rather than being guaranteed. Accounts and karma ledgers stay on-device. The real backend replaces all of this with authenticated Realtime + Postgres.
 - **Basemap tiles come from a third party** (CARTO's OSM-derived tiles, no API key). If they are unreachable the app fails over to a backup source and then to a plain ground colour — the markers stay correctly positioned either way.
 - **No moderation queue, image moderation, app attestation, or push notifications.** These are specified in `PLANNING.md` §6 and are server-side work.
 - **"PokeRadar" is a working title.** The name collides with Nintendo trademark territory; `PLANNING.md` §7 covers the legal review that has to happen before any store submission. No Nintendo assets are used anywhere in this repository.

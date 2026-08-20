@@ -12,7 +12,7 @@
 
 import { BASEMAP, RULES, tierFor } from './config.js';
 import * as db from './db.js';
-import { photoFor } from './seed.js';
+import { photoFor } from './db.js';
 import { clamp, el, prefersReducedMotion } from './util.js';
 
 const RING_RADIUS = 45;
@@ -217,8 +217,10 @@ export class RadarMap {
     refs.arc = ring.querySelector('.marker__arc');
     refs.photo = el('span', { class: 'marker__photo' });
     refs.badge = el('span', { class: 'marker__badge', hidden: true });
+    // First find at this store in 24 h — the Scout system's visible reward.
+    refs.star = el('span', { class: 'marker__star', hidden: true, text: '★' });
 
-    root.append(ring, refs.photo, refs.badge);
+    root.append(ring, refs.photo, refs.badge, refs.star);
     root.addEventListener('click', (event) => {
       event.stopPropagation();
       this.onSelect?.(post.id);
@@ -256,6 +258,7 @@ export class RadarMap {
     root.classList.toggle('marker--gone', gone);
     refs.badge.hidden = !gone;
     refs.badge.textContent = gone ? 'gone?' : '';
+    refs.star.hidden = gone || !db.isFirstScout(post);
 
     root.classList.toggle('marker--selected', this.selectedId === post.id);
     entry.expiresAt = post.expires_at;

@@ -7,7 +7,7 @@
  * next load rather than after a hard refresh.
  */
 
-const VERSION = 'pokeradar-v2';
+const VERSION = 'pokeradar-v4';
 const SHELL = [
   './',
   './index.html',
@@ -18,12 +18,12 @@ const SHELL = [
   './js/config.js',
   './js/util.js',
   './js/db.js',
-  './js/imagery.js',
-  './js/seed.js',
   './js/map.js',
   './js/sheet.js',
   './js/compose.js',
   './js/ui.js',
+  './js/sync.js',
+  './js/xp.js',
   './js/flyers.js',
   './js/flyerview.js',
   './js/flyerart.js',

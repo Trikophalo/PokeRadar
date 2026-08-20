@@ -72,11 +72,12 @@ export function evaluate(flyer, { stores = [], origin = null } = {}) {
   const auto = autoMatch(flyer);
   const community = db.flyerFindStats(flyer.id);
 
-  // With no location fix we cannot judge distance, so we do not use it to hide
-  // anything. With one, the chain needs a branch inside the radius (§10.5).
-  const inRange = !origin
+  // Hide on distance only when we positively know the nearest branch is too
+  // far. Branches are learned from sightings now, so "no branch known" means
+  // "no data", not "no branch" — and no data must never empty the tab (§10.5).
+  const inRange = !origin || !branch
     ? true
-    : Boolean(branch) && branch.distance <= FLYER_RULES.maxBranchDistanceM;
+    : branch.distance <= FLYER_RULES.maxBranchDistanceM;
 
   return {
     flyer,

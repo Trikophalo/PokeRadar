@@ -18,6 +18,27 @@ import { distanceMeters, uid } from './util.js';
 
 const listeners = new Set();
 
+/**
+ * Synchronous action bus, separate from the coalesced emit() below. emit()
+ * batches per microtask and drops details, which is right for view refreshes
+ * and wrong for sync — the transport needs every local mutation exactly once,
+ * with its payload. Remote applications fire with {remote:true} so the
+ * transport never echoes them back out.
+ */
+const actionListeners = new Set();
+export function onAction(fn) {
+  actionListeners.add(fn);
+  return () => actionListeners.delete(fn);
+}
+function fireAction(action) {
+  for (const fn of actionListeners) {
+    try { fn(action); } catch { /* one bad listener must not break writes */ }
+  }
+}
+
+/** A post's display photo. Absent on pruned or partially-synced posts. */
+export const photoFor = (post) => post?.photo || null;
+
 const emptyState = () => ({
   version: 1,
   profiles: {},
@@ -44,9 +65,31 @@ export function load() {
   } catch {
     state = emptyState();
   }
+  purgeDemoData();
   pruneExpiredPhotos();
   reconcileFlyerFinds();
   return state;
+}
+
+/**
+ * Migration: earlier builds seeded a simulated community (posts, reporters,
+ * trickled votes) so the map was never empty. With real cross-user sync that
+ * scaffolding is gone — and any of it still sitting in a visitor's
+ * localStorage from a previous version is deleted here.
+ */
+function purgeDemoData() {
+  let dirty = false;
+  for (const [id, post] of Object.entries(state.posts)) {
+    if (post.is_demo_seed) { delete state.posts[id]; dirty = true; }
+  }
+  for (const [id, profile] of Object.entries(state.profiles)) {
+    if (profile.is_demo_seed) { delete state.profiles[id]; dirty = true; }
+  }
+  for (const [key, vote] of Object.entries(state.votes)) {
+    const postId = vote.post_id;
+    if (postId && !state.posts[postId]) { delete state.votes[key]; dirty = true; }
+  }
+  if (dirty) persist();
 }
 
 /**
@@ -149,7 +192,6 @@ export function signIn(username, { avatar } = {}) {
     email_verified_at: null,
     last_post_at: null,
     status: 'active',
-    is_demo_seed: false,
   };
   state.profiles[profile.id] = profile;
   state.session.user_id = profile.id;
@@ -234,13 +276,14 @@ export function createPost({ title, description, photo, location, accuracy, stor
     down_count: 0,
     sold_out_count: 0,
     status: 'active',
-    is_demo_seed: false,
+    is_remote: false,
   };
 
   state.posts[post.id] = post;
   author.last_post_at = Date.now();
   persist();
   emit({ type: 'post:new', post });
+  fireAction({ type: 'post', post, author });
   return { ok: true, post };
 }
 
@@ -253,6 +296,7 @@ export function deletePost(postId) {
   post.status = 'removed';
   persist();
   emit({ type: 'post:removed', post });
+  fireAction({ type: 'delete', postId: post.id, authorId: me.id });
   return { ok: true };
 }
 
@@ -320,6 +364,7 @@ export function castVote(postId, value, reason = null) {
     delete state.votes[key];
     persist();
     emit({ type: 'vote', postId });
+    fireAction({ type: 'vote:retract', postId, voterId: voter.id });
     return { ok: true, retracted: true };
   }
 
@@ -339,6 +384,7 @@ export function castVote(postId, value, reason = null) {
   applyVoteEffect(vote, post);
   persist();
   emit({ type: 'vote', postId });
+  fireAction({ type: 'vote', vote, voter });
   return { ok: true, vote };
 }
 
@@ -400,6 +446,7 @@ export function flagSoldOut(postId) {
   post.sold_out_count += 1;
   persist();
   emit({ type: 'soldout', postId });
+  fireAction({ type: 'soldout', postId, userId: user.id });
   return { ok: true };
 }
 
@@ -556,18 +603,31 @@ function awardFlyerFindKarma(flyerId) {
 
 /* --------------------------------------------------------------- stores --- */
 
-/** Nearest known store within range — the offline stand-in for Places snapping. */
-export function snapToStore(location, stores, maxMeters = 160) {
-  let best = null;
-  let bestDistance = Infinity;
-  for (const store of stores) {
-    const d = distanceMeters(location, store);
-    if (d < bestDistance) {
-      bestDistance = d;
-      best = store;
+/**
+ * The store registry, learned from real sightings instead of a seeded list.
+ * Every post that names a store teaches the app where that store is; the
+ * newest post per name wins the coordinates. This is the §3 `stores` table
+ * growing organically — in production it is fed by Places snapping, here it
+ * is fed by the community itself.
+ */
+export function learnedStores() {
+  const byName = new Map();
+  for (const post of Object.values(state.posts)) {
+    if (!post.store_name || post.status === 'removed') continue;
+    const key = post.store_name.trim().toLowerCase();
+    const existing = byName.get(key);
+    if (!existing || post.captured_at > existing.captured_at) {
+      byName.set(key, post);
     }
   }
-  return best && bestDistance <= maxMeters ? { store: best, distance: bestDistance } : null;
+  return [...byName.values()].map((post) => ({
+    place_id: post.store_place_id || null,
+    name: post.store_name.trim(),
+    chain: post.store_name.trim().split(/[\s,]+/)[0],
+    lat: post.lat,
+    lng: post.lng,
+    captured_at: post.captured_at,
+  }));
 }
 
 export function nearbyStores(location, stores, limit = 4) {
@@ -575,4 +635,230 @@ export function nearbyStores(location, stores, limit = 4) {
     .map((store) => ({ store, distance: distanceMeters(location, store) }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, limit);
+}
+
+/**
+ * First find: was this the first sighting at its store in the 24 h before it?
+ * The Scout system pays a bonus for it and the marker wears a star — being
+ * first is the behaviour the app most wants to reward.
+ */
+export function isFirstScout(post) {
+  if (!post?.store_name) return false;
+  const name = post.store_name.trim().toLowerCase();
+  const windowStart = post.captured_at - 24 * 60 * 60 * 1000;
+  for (const other of Object.values(state.posts)) {
+    if (other.id === post.id || !other.store_name || other.status === 'removed') continue;
+    if (other.store_name.trim().toLowerCase() !== name) continue;
+    if (other.captured_at >= windowStart && other.captured_at < post.captured_at) return false;
+  }
+  return true;
+}
+
+/* --------------------------------------------------------------- remote --- */
+/*
+ * Apply-side of the live sync. These functions accept envelopes that arrived
+ * over the wire, so they trust nothing: every field is validated and clamped
+ * before it touches state, and every application is idempotent so replays
+ * (SSE echo + catch-up poll delivering the same message) are harmless. They
+ * emit with {remote:true} — the transport ignores those, breaking the loop.
+ */
+
+const finiteIn = (n, lo, hi) => Number.isFinite(n) && n >= lo && n <= hi;
+
+function sanitizeRemoteProfile(raw) {
+  if (!raw || typeof raw.id !== 'string' || raw.id.length > 64) return null;
+  return {
+    id: raw.id,
+    username: String(raw.username || 'scout').slice(0, 20),
+    avatar: {
+      hue: finiteIn(Number(raw.avatar?.hue), 0, 360) ? Number(raw.avatar.hue) : 200,
+      glyph: String(raw.avatar?.glyph || '?').slice(0, 2),
+    },
+    karma: finiteIn(Number(raw.karma), -10000, 100000) ? Math.round(Number(raw.karma)) : 0,
+    created_at: finiteIn(Number(raw.created_at), 0, Date.now() + 60000)
+      ? Number(raw.created_at) : Date.now(),
+    email_verified_at: raw.email_verified_at ? Number(raw.email_verified_at) : null,
+    last_post_at: null,
+    status: 'active',
+    is_remote: true,
+  };
+}
+
+/** Upsert a shadow profile for a remote author/voter. Never touches local users. */
+function upsertRemoteProfile(raw) {
+  const clean = sanitizeRemoteProfile(raw);
+  if (!clean) return null;
+  const existing = state.profiles[clean.id];
+  if (existing && !existing.is_remote) return existing;   // never overwrite a local account
+  state.profiles[clean.id] = { ...existing, ...clean };
+  return state.profiles[clean.id];
+}
+
+export function applyRemotePost(rawPost, rawAuthor) {
+  if (!rawPost || typeof rawPost.id !== 'string' || rawPost.id.length > 64) return { ok: false };
+  if (state.posts[rawPost.id]) return { ok: false, duplicate: true };
+
+  const captured_at = Number(rawPost.captured_at);
+  const now = Date.now();
+  // Stale or future-dated envelopes are dropped outright.
+  if (!finiteIn(captured_at, now - RULES.votingWindowMs, now + 5 * 60 * 1000)) return { ok: false };
+  if (!finiteIn(Number(rawPost.lat), -90, 90) || !finiteIn(Number(rawPost.lng), -180, 180)) return { ok: false };
+
+  const author = upsertRemoteProfile(rawAuthor);
+  if (!author) return { ok: false };
+
+  const photo = typeof rawPost.photo === 'string'
+    && rawPost.photo.startsWith('data:image/')
+    && rawPost.photo.length < 160000
+    ? rawPost.photo : null;
+
+  const post = {
+    id: rawPost.id,
+    author_id: author.id,
+    title: String(rawPost.title || '').slice(0, RULES.titleMaxLength) || 'Sighting',
+    description: rawPost.description ? String(rawPost.description).slice(0, RULES.descriptionMaxLength) : null,
+    photo,
+    lat: Number(rawPost.lat),
+    lng: Number(rawPost.lng),
+    location_accuracy_m: finiteIn(Number(rawPost.location_accuracy_m), 0, 10000)
+      ? Math.round(Number(rawPost.location_accuracy_m)) : null,
+    store_name: rawPost.store_name ? String(rawPost.store_name).slice(0, 80) : null,
+    store_place_id: rawPost.store_place_id ? String(rawPost.store_place_id).slice(0, 64) : null,
+    captured_at,
+    expires_at: captured_at + RULES.visibilityMs,
+    up_count: 0,
+    down_count: 0,
+    sold_out_count: 0,
+    status: 'active',
+    is_remote: true,
+  };
+  state.posts[post.id] = post;
+  persist();
+  emit({ type: 'post:new', post, remote: true });
+  return { ok: true, post };
+}
+
+/** Late-arriving photo chunks completing a post that was inserted without one. */
+export function attachRemotePhoto(postId, photo) {
+  const post = state.posts[postId];
+  if (!post || !post.is_remote || post.photo) return false;
+  if (typeof photo !== 'string' || !photo.startsWith('data:image/') || photo.length > 160000) return false;
+  post.photo = photo;
+  persist();
+  emit({ type: 'post:photo', postId, remote: true });
+  return true;
+}
+
+export function applyRemoteVote({ postId, voter, value, reason, countsForKarma, ts }) {
+  const post = state.posts[postId];
+  if (!post || post.status !== 'active') return { ok: false };
+  if (value !== 1 && value !== -1) return { ok: false };
+
+  const profile = upsertRemoteProfile(voter);
+  if (!profile) return { ok: false };
+  if (profile.id === post.author_id) return { ok: false };
+
+  const key = `${postId}:${profile.id}`;
+  const existing = state.votes[key];
+  const stamp = finiteIn(Number(ts), 0, Date.now() + 60000) ? Number(ts) : Date.now();
+  // Idempotence: same value again (replay) is a no-op; older than what we have loses.
+  if (existing && existing.value === value) return { ok: true, duplicate: true };
+  if (existing && existing.updated_at > stamp) return { ok: false, stale: true };
+
+  if (existing) removeVoteEffectRemote(existing, post);
+
+  const vote = {
+    post_id: postId,
+    voter_id: profile.id,
+    value,
+    reason: value === -1 ? String(reason || 'not_restocked').slice(0, 32) : null,
+    counts_for_karma: Boolean(countsForKarma),
+    created_at: existing?.created_at || stamp,
+    updated_at: stamp,
+    is_remote: true,
+  };
+  state.votes[key] = vote;
+  applyVoteEffectRemote(vote, post);
+  persist();
+  emit({ type: 'vote', postId, remote: true });
+  return { ok: true };
+}
+
+export function applyRemoteVoteRetraction({ postId, voterId }) {
+  const post = state.posts[postId];
+  const key = `${postId}:${voterId}`;
+  const existing = state.votes[key];
+  if (!post || !existing) return { ok: false };
+  removeVoteEffectRemote(existing, post);
+  delete state.votes[key];
+  persist();
+  emit({ type: 'vote', postId, remote: true });
+  return { ok: true };
+}
+
+/**
+ * Counts always move; karma only when the vote qualifies AND the author is a
+ * profile this device owns — that is the author's device receiving judgement
+ * on their own post, the one place the real ledger lives. For remote authors
+ * only the shadow karma number shifts, so their chip stays roughly current.
+ */
+function applyVoteEffectRemote(vote, post) {
+  if (vote.value === 1) post.up_count += 1;
+  else post.down_count += 1;
+  if (!vote.counts_for_karma) return;
+
+  const author = state.profiles[post.author_id];
+  if (!author) return;
+  if (author.is_remote) {
+    author.karma += vote.value;
+  } else {
+    const capped = capForPost(post.author_id, post.id, vote.value);
+    if (capped !== 0) {
+      // The vote_id must name the REMOTE voter — addKarmaEvent's default
+      // derives it from the session user, which on the author's device is the
+      // author, and the retraction lookup would then never match.
+      addKarmaEvent(post.author_id, capped, vote.value === 1 ? 'post_upvoted' : 'post_downvoted',
+        post.id, `${post.id}:${vote.voter_id}`);
+    }
+  }
+}
+
+function removeVoteEffectRemote(vote, post) {
+  if (vote.value === 1) post.up_count = Math.max(0, post.up_count - 1);
+  else post.down_count = Math.max(0, post.down_count - 1);
+  if (!vote.counts_for_karma) return;
+
+  const author = state.profiles[post.author_id];
+  if (!author) return;
+  if (author.is_remote) {
+    author.karma -= vote.value;
+  } else {
+    const contributed = state.karma_events
+      .filter((e) => e.post_id === post.id && e.user_id === post.author_id
+        && e.vote_id === `${vote.post_id}:${vote.voter_id}`)
+      .reduce((sum, e) => sum + e.delta, 0);
+    if (contributed !== 0) addKarmaEvent(post.author_id, -contributed, 'vote_changed', post.id);
+  }
+}
+
+export function applyRemoteSoldOut({ postId, userId }) {
+  const post = state.posts[postId];
+  if (!post || typeof userId !== 'string') return { ok: false };
+  const key = `soldout:${postId}:${userId}`;
+  if (state.votes[key]) return { ok: true, duplicate: true };
+  state.votes[key] = { kind: 'sold_out', post_id: postId, voter_id: userId, created_at: Date.now() };
+  post.sold_out_count += 1;
+  persist();
+  emit({ type: 'soldout', postId, remote: true });
+  return { ok: true };
+}
+
+export function applyRemoteDelete({ postId, authorId }) {
+  const post = state.posts[postId];
+  // Only the author may retract their own sighting — same rule as locally.
+  if (!post || post.author_id !== authorId) return { ok: false };
+  post.status = 'removed';
+  persist();
+  emit({ type: 'post:removed', post, remote: true });
+  return { ok: true };
 }

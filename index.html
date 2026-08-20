@@ -41,6 +41,8 @@
       <span class="brand__word">PokeRadar</span>
     </div>
     <div class="chrome__spacer"></div>
+    <button id="sync-status" class="pillbtn pillbtn--sync" type="button" data-state="connecting"
+            aria-label="Live sync status"><span class="syncdot"></span></button>
     <button id="theme-toggle" class="pillbtn" type="button" aria-label="Appearance">◐</button>
     <button id="account" class="pillbtn pillbtn--account" type="button" aria-label="Sign in"></button>
   </div>
@@ -77,7 +79,7 @@
       <div id="sheet-content" class="sheet__content"></div>
       <footer class="sheet__footer">
         <p>Sightings drop off the map one hour after capture. Votes stay open for six.</p>
-        <p class="sheet__footer-note">Prototype — data lives in this browser only. <a href="./PLANNING.md">Read the architecture plan</a></p>
+        <p class="sheet__footer-note">Prototype — sightings sync live between everyone with the app open; accounts stay on this device. <a href="./PLANNING.md">Read the architecture plan</a></p>
       </footer>
     </div>
   </section>

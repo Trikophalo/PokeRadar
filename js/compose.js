@@ -3,16 +3,15 @@
  *
  * PLANNING.md §6 makes camera-capture-only the cornerstone anti-abuse rule:
  * no gallery import, so faking a sighting means physically photographing
- * something right now. This build keeps that rule — the one concession is an
- * explicitly labelled demo frame for visitors on a device with no camera,
- * which is a property of the public demo and not of the product.
+ * something right now. There is deliberately no fallback path — a device
+ * without camera access cannot post, and the screen says why.
  */
 
-import { RULES } from './config.js';
+import { KNOWN_CHAINS, RULES } from './config.js';
 import * as db from './db.js';
-import { productPhoto } from './imagery.js';
+import { xpForPost } from './xp.js';
 import { toast } from './ui.js';
-import { $, clear, downscaleImage, el, formatDistance, haptic, uid } from './util.js';
+import { clear, downscaleImage, el, formatDistance, haptic, normalizeText } from './util.js';
 
 export class ComposeFlow {
   constructor(modal, { getLocation, getStores, onPosted }) {
@@ -95,29 +94,20 @@ export class ComposeFlow {
       shutter.addEventListener('click', () => {
         if (!video.videoWidth) return;
         haptic(14);
-        this.capture = { photo: downscaleImage(video), capturedAt: Date.now(), simulated: false };
+        this.capture = { photo: downscaleImage(video), capturedAt: Date.now() };
         this.teardown();
         this.renderDetailsStep();
       });
     } catch {
-      // No camera, or permission refused. Say so plainly and offer the demo path.
+      // No camera, or permission refused. Camera-capture-only is the
+      // anti-abuse cornerstone (§6), so there is no fallback path — the
+      // screen explains the rule instead of quietly weakening it.
       clear(stage);
       stage.append(el('div', { class: 'compose__nocam' }, [
         el('div', { class: 'compose__nocam-glyph', text: '📷' }),
-        el('h3', { text: 'Camera unavailable' }),
+        el('h3', { text: 'Camera required' }),
         el('p', { class: 'muted', text:
-          'PokeRadar posts are camera-only — no gallery uploads — so every photo is taken at the shelf. This browser has no camera available, so you can continue with a generated demo frame instead.' }),
-        el('button', {
-          class: 'btn btn--primary', type: 'button', text: 'Use a demo photo',
-          onclick: () => {
-            this.capture = {
-              photo: productPhoto(uid('demo'), { width: 720 }),
-              capturedAt: Date.now(),
-              simulated: true,
-            };
-            this.renderDetailsStep();
-          },
-        }),
+          'Sightings are camera-only — no gallery uploads — so every photo on the map was really taken at the shelf, right then. Allow camera access or open PokeRadar on your phone to post.' }),
       ]));
     }
   }
@@ -128,14 +118,14 @@ export class ComposeFlow {
     clear(this.panel);
     const location = this.getLocation();
     const stores = this.getStores();
-    const nearby = location ? db.nearbyStores(location, stores, 4) : [];
+    const nearby = location
+      ? db.nearbyStores(location, stores, 4).filter((n) => n.distance <= 600)
+      : [];
     let selectedStore = nearby[0]?.store || null;
+    let manualName = '';
 
     const preview = el('div', { class: 'compose__preview' });
     preview.style.backgroundImage = `url("${this.capture.photo}")`;
-    if (this.capture.simulated) {
-      preview.append(el('span', { class: 'compose__preview-flag', text: 'demo frame' }));
-    }
 
     const title = el('input', {
       class: 'field__input', type: 'text', maxlength: String(RULES.titleMaxLength),
@@ -147,28 +137,84 @@ export class ComposeFlow {
       placeholder: 'Optional: aisle, how many left, staff info…', 'aria-label': 'Description',
     });
 
+    /* Known stores nearby (learned from earlier sightings) as one-tap chips. */
     const storeChips = el('div', { class: 'chips' });
     const paintChips = () => {
       clear(storeChips);
-      if (!nearby.length) {
-        storeChips.append(el('span', { class: 'muted', text: 'No known store within range — the raw GPS point will be used.' }));
-        return;
-      }
       for (const { store, distance } of nearby) {
+        const active = selectedStore?.name === store.name && !manualName;
         const chip = el('button', {
-          class: `chip chip--tappable ${selectedStore?.place_id === store.place_id ? 'is-active' : ''}`,
+          class: `chip chip--tappable ${active ? 'is-active' : ''}`,
           type: 'button',
         }, [
           el('span', { text: `📍 ${store.name}` }),
           el('span', { class: 'chip__distance', text: formatDistance(distance) }),
         ]);
         chip.addEventListener('click', () => {
-          selectedStore = selectedStore?.place_id === store.place_id ? null : store;
+          selectedStore = active ? null : store;
+          manualName = '';
+          storeInput.value = '';
           paintChips();
+          paintSuggestions();
         });
         storeChips.append(chip);
       }
     };
+
+    /*
+     * Manual entry with typing assistance: if the store is not (yet) known to
+     * the radar, the user writes it themselves. Suggestions come from every
+     * store the community has already taught the app, plus the chain list —
+     * tapping a chain drops it into the field so only the street is left to
+     * type. A manually named store becomes a learned store for everyone after
+     * this post syncs.
+     */
+    const storeInput = el('input', {
+      class: 'field__input', type: 'text', maxlength: '80',
+      placeholder: nearby.length ? 'Different store? Type its name…' : 'Store name, e.g. Müller Bahnhofstr. 12',
+      'aria-label': 'Store name',
+    });
+    const suggestions = el('div', { class: 'suggest', hidden: true });
+
+    const paintSuggestions = () => {
+      clear(suggestions);
+      const query = normalizeText(storeInput.value);
+      if (query.length < 1) { suggestions.hidden = true; return; }
+
+      const fromLearned = stores
+        .filter((store) => normalizeText(store.name).includes(query))
+        .slice(0, 3)
+        .map((store) => ({ label: store.name, value: store.name, complete: true }));
+      const fromChains = KNOWN_CHAINS
+        .filter((chain) => normalizeText(chain).startsWith(query))
+        .filter((chain) => !fromLearned.some((s) => normalizeText(s.value).startsWith(normalizeText(chain))))
+        .slice(0, 4)
+        .map((chain) => ({ label: `${chain}…`, value: `${chain} `, complete: false }));
+
+      const items = [...fromLearned, ...fromChains];
+      suggestions.hidden = items.length === 0;
+      for (const item of items) {
+        suggestions.append(el('button', {
+          class: 'suggest__item', type: 'button', text: item.label,
+          onclick: () => {
+            storeInput.value = item.value;
+            manualName = item.value.trim();
+            selectedStore = null;
+            paintChips();
+            if (item.complete) { suggestions.hidden = true; }
+            else { storeInput.focus(); paintSuggestions(); }
+          },
+        }));
+      }
+    };
+
+    storeInput.addEventListener('input', () => {
+      manualName = storeInput.value.trim();
+      if (manualName) selectedStore = null;
+      paintChips();
+      paintSuggestions();
+    });
+
     paintChips();
 
     const submit = el('button', { class: 'btn btn--primary btn--full', type: 'button', text: 'Post sighting' });
@@ -186,20 +232,26 @@ export class ComposeFlow {
           description,
         ]),
         el('div', { class: 'field' }, [
-          el('span', { class: 'field__label', text: 'Location' }),
+          el('span', { class: 'field__label', text: 'Store' }),
           el('p', { class: 'compose__geo', text: location
             ? (location.accuracy
-              ? `Tagged from GPS ±${Math.round(location.accuracy)} m — location cannot be placed by hand.`
-              : 'Tagged from your GPS fix — location cannot be placed by hand.')
+              ? `Position tagged from GPS ±${Math.round(location.accuracy)} m — the pin cannot be placed by hand.`
+              : 'Position tagged from your GPS fix — the pin cannot be placed by hand.')
             : 'No GPS fix yet. Allow location access to post.' }),
           storeChips,
+          storeInput,
+          suggestions,
         ]),
         submit,
       ]),
     );
 
     title.focus();
-    submit.addEventListener('click', () => this.submit({ title, description, location, selectedStore }));
+    submit.addEventListener('click', () => {
+      const store = selectedStore
+        || (manualName.length >= 3 ? { name: manualName, place_id: null } : null);
+      this.submit({ title, description, location, selectedStore: store });
+    });
   }
 
   submit({ title, description, location, selectedStore }) {
@@ -224,7 +276,10 @@ export class ComposeFlow {
 
     haptic([12, 40, 18]);
     this.modal.close();
-    toast('Sighting posted — live on the map for one hour.', { tone: 'good' });
+    const gain = xpForPost(result.post);
+    toast(gain.first
+      ? `First find at this store! Live for one hour · +${gain.total} XP`
+      : `Sighting live for one hour · +${gain.total} XP`, { tone: 'good' });
     this.onPosted?.(result.post);
   }
 }

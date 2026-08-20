@@ -83,13 +83,67 @@ export const BASEMAP = {
 /** Where the map opens when the visitor declines location. */
 export const FALLBACK_CENTER = { lat: 52.5211, lng: 13.4059, label: 'Berlin Mitte' };
 
-export const DEMO = {
-  /** The simulator tops the map up to this many live sightings. */
-  targetActivePosts: 22,
-  /** Interval at which a new simulated sighting can drop in. */
-  heartbeatMs: 22 * 1000,
-  /** Simulated votes trickle in on visible posts at this interval. */
-  voteTickMs: 9 * 1000,
+/**
+ * Live sync (prototype transport).
+ *
+ * GitHub Pages has no backend, so cross-user delivery runs over a public
+ * pub/sub broker: every client publishes its posts/votes to a shared ntfy
+ * topic and subscribes to the same topic via SSE. No account, no API key —
+ * and therefore also no server-side validation: clients validate incoming
+ * envelopes themselves, and the topic is public by design (so is every
+ * sighting). Production swaps this module for Supabase Realtime; the rest
+ * of the app only ever talks to sync.js.
+ */
+export const SYNC = {
+  enabled: true,
+  server: 'https://ntfy.sh',
+  topic: 'pokeradar-live-v1-de',
+  /** How far back a fresh client pulls cached messages on load. */
+  pollWindow: '3h',
+  /** Max JSON payload per broker message; larger photos are chunked. */
+  chunkChars: 3000,
+  /** Photos are recompressed to roughly this size before broadcast. */
+  photoMaxEdge: 300,
+  photoQuality: 0.52,
+};
+
+/** Chains offered by the store autocomplete when no known store matches. */
+export const KNOWN_CHAINS = [
+  'Müller', 'Rossmann', 'dm', 'EDEKA', 'REWE', 'Kaufland', 'Lidl', 'Aldi',
+  'Penny', 'Netto', 'MediaMarkt', 'Saturn', 'Thalia', 'Smyths Toys',
+  'GameStop', 'Galeria', 'Woolworth', 'Hugendubel',
+];
+
+/**
+ * The Scout system (motivation layer). Karma stays pure trust — it can fall,
+ * and it only moves when other people judge your accuracy. XP is the second
+ * currency: activity-only, never decreases, and pays out the moment you act,
+ * which is exactly the feedback posting itself was missing. Everything here
+ * is derived from existing state (posts, votes, finds), never stored — so it
+ * cannot drift and needs no extra write paths.
+ */
+export const SCOUT = {
+  xp: {
+    post: 10,             // publishing a sighting
+    firstScoutBonus: 5,   // first sighting at that store in 24 h
+    confirmReceived: 3,   // per confirm on your posts…
+    confirmCapPerPost: 10 * 3, // …capped, so one viral post cannot carry a level
+    voteCast: 2,          // judging someone else's sighting
+    soldOutFlag: 1,       // freshness housekeeping
+    flyerFind: 10,        // confirmed community flyer find
+    streakWeekBonus: 5,   // per week of the current posting streak
+  },
+  levels: [
+    { xp: 0,    name: 'Rookie Scout' },
+    { xp: 40,   name: 'Trail Scout' },
+    { xp: 100,  name: 'Shelf Scout' },
+    { xp: 200,  name: 'City Scout' },
+    { xp: 350,  name: 'Radar Pro' },
+    { xp: 550,  name: 'Master Scout' },
+    { xp: 800,  name: 'Elite Scout' },
+    { xp: 1100, name: 'Radar Captain' },
+    { xp: 1500, name: 'Radar Legend' },
+  ],
 };
 
 /**

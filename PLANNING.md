@@ -393,3 +393,30 @@ The static prototype cannot call retailer or aggregator APIs from the browser �
 | Sorting | Nearest-branch distance, tiebreak by soonest expiry; 25 km visibility radius. |
 | Navigation | Introduce the two-item tab bar (Radar · Flyers) rather than burying flyers in a sheet. |
 | Legal | Flyer content is licensed material — legal review before any crawling/re-hosting ships. |
+
+---
+
+## 11. Extension: live sync in the prototype
+
+The prototype originally simulated its community; that scaffolding is removed. Cross-user delivery is now real: every client publishes its posts, votes, sold-out flags and deletions as validated JSON envelopes to a shared public pub/sub topic (ntfy.sh — account-less, CORS-open, ~12 h message cache) and applies everyone else's envelopes idempotently. Photos are recompressed to ~300 px and chunked to fit the broker's message size; a fresh client backfills the last hours with one poll, then rides the SSE stream. A status dot in the top chrome shows live / connecting / offline.
+
+What deliberately does **not** change with the transport: all §6 rules are enforced on the *applying* side — envelopes are untrusted input, fields are clamped, inserts are rate-limited, probation crosses the wire (a new account's vote syncs its count but never moves karma), and karma ledgers stay per-device truth for the device's own user. Production replaces exactly one module (`sync.js`) with Supabase Realtime + Postgres, which also retires the transport's honest caveats (public topic, best-effort consistency, no server-side validation).
+
+Store data follows the same shift: the seeded registry is gone, and **stores are learned from sightings** — every post that names a store teaches the map where it is. At post time the app offers nearby learned stores as one-tap chips and otherwise a free-text field with typing assistance (learned stores + a chain list; tapping "Müller…" leaves only the street to type). A manually named store becomes a suggestion for everyone after the post syncs.
+
+## 12. Extension: the Scout system (motivation)
+
+Why people post is as designed as what they post. Karma alone under-rewards the act of posting — it only moves when *others* vote, possibly hours later. The Scout system adds a second currency with a different job, so trust stays clean while activity pays instantly:
+
+| | **Karma (trust)** | **XP (activity)** |
+|---|---|---|
+| Moves when | others judge your accuracy | you act — immediately |
+| Can decrease | yes | never |
+| Drives | tiers, review-queue skips, vote weight | Scout levels, streaks, badges |
+| Farmable? | no (probation, caps, symmetric votes) | only by doing useful things |
+
+**XP sources** (derived, never stored — cannot drift, syncs for free): +10 post · **+5 first find** (first sighting at that store in 24 h — the marker wears a ⭐, the behaviour the radar wants most) · +3 per confirm received (capped ±30/post) · +2 per vote cast · +1 sold-out flag · +10 confirmed flyer find · +5 per week of the current posting streak.
+
+**Levels** (9, Rookie Scout → Radar Legend) gate nothing — they are identity, shown with a progress bar on the profile. **Weekly streaks** fit the shopping rhythm (daily would burn out); the streak survives until a full calendar week passes without a sighting. **Badges** (8: First Find, Early Bird, Chain Hopper, Crowd Pick, Trusted Eyes, Fact Checker, Flyer Finder, Regular) are earned-state derivations shown as a badge case, locked ones visible with their hint — goals, not mysteries. The posting moment itself celebrates: the success toast shows the XP gained, first finds get named, and the cooldown screen nudges the streak.
+
+Deliberately excluded, per §4's principle: XP buys **no reach** — no ranking boosts, no longer marker lifetimes, no karma. Perks stay visibility and identity, so the incentive to farm stays near zero.
