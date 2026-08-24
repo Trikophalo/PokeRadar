@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schach für Kinder</title>
+<meta name="description" content="Schachschule für Kinder ab 5 Jahren in Karlsruhe – mit Spaß das logische Denken fördern. Kostenlose Schnupperstunde nach Terminvereinbarung.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#home">Zum Inhalt springen</a>
+
+<!-- ================= HEADER ================= -->
+<header class="header" id="siteHeader">
+  <div class="container header-inner">
+    <a href="#home" class="logo-link" data-navclose aria-label="Schach für Kinder – zur Startseite">
+      <img src="images/logo.jpg" alt="Logo: Schach für Kinder" class="logo-img">
+    </a>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <a href="#home" data-navlink="home" class="is-active">Home</a>
+      <a href="#ueber-uns" data-navlink="ueber-uns">Über uns</a>
+      <a href="#kurse" data-navlink="kurse">Kurse</a>
+      <a href="#schnupperstunde" data-navlink="schnupperstunde">Schnupperstunde</a>
+      <a href="#warum-schach" data-navlink="warum-schach">Warum Schach</a>
+      <a href="#kontakt" data-navlink="kontakt">Kontakt</a>
+    </nav>
+    <button class="burger" id="burger" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobileMenu">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile-Menü (Overlay im Stil der Original-Navigation) -->
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <nav class="mobile-nav" aria-label="Mobile Navigation">
+    <a href="#home" data-navlink="home" data-navclose class="is-active">Home</a>
+    <a href="#ueber-uns" data-navlink="ueber-uns" data-navclose>Über uns</a>
+    <a href="#kurse" data-navlink="kurse" data-navclose>Kurse</a>
+    <a href="#schnupperstunde" data-navlink="schnupperstunde" data-navclose>Schnupperstunde</a>
+    <a href="#warum-schach" data-navlink="warum-schach" data-navclose>Warum Schach</a>
+    <a href="#kontakt" data-navlink="kontakt" data-navclose>Kontakt</a>
+  </nav>
+  <p class="mobile-menu-foot">Schachschule für Kinder · Karlsruhe</p>
+</div>
+
+<main>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="home">
+  <span class="bg-glyph bg-glyph--1" aria-hidden="true">♞</span>
+  <span class="bg-glyph bg-glyph--2" aria-hidden="true">♜</span>
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow reveal"><span class="checker" aria-hidden="true"></span><span class="script">Die Schachschule für Kinder in Karlsruhe – seit 2004</span></p>
+      <h1 class="hero-title reveal" style="--d:.08s" aria-label="Schach für Kinder">
+        <span class="hero-word">Schach</span>
+        <span class="hero-script" aria-hidden="true">für Kinder</span>
+      </h1>
+      <p class="hero-claim reveal" style="--d:.16s">Mit <span class="mark">Spass</span> das logische Denken fördern</p>
+      <div class="hero-ctas reveal" style="--d:.24s">
+        <a class="btn btn--primary" href="#schnupperstunde">Kostenlose Schnupperstunde</a>
+        <a class="btn btn--ghost" href="#warum-schach">Warum Schach?</a>
+      </div>
+      <ul class="hero-facts reveal" style="--d:.32s">
+        <li class="fact-chip"><span class="g g--red" aria-hidden="true">♟</span>Ab 5 Jahren</li>
+        <li class="fact-chip"><span class="g" aria-hidden="true">♘</span>Trainer mit C-Lizenz</li>
+        <li class="fact-chip"><span class="g" aria-hidden="true">♕</span>Einstieg jederzeit</li>
+      </ul>
+    </div>
+    <div class="hero-photo reveal" style="--d:.2s">
+      <img class="hero-img" src="images/hero-kinder.jpg" alt="Ein Junge und ein Mädchen spielen konzentriert Schach">
+      <span class="float-chip float-chip--1"><span class="g g--red" aria-hidden="true">♟</span>Ab 5 Jahren</span>
+      <span class="float-chip float-chip--2"><span class="g" aria-hidden="true">♕</span>Seit 2004</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VORTEILE ================= -->
+<section class="section" id="vorteile">
+  <div class="container">
+    <header class="section-head reveal">
+      <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Darum lohnt es sich</span></p>
+      <h2 class="h-display h2">Wir sind eine Schachschule für Kinder</h2>
+    </header>
+    <ul class="benefits">
+      <li class="benefit reveal" style="--d:.02s"><span class="benefit-glyph v-b" aria-hidden="true">♚</span><p>Schach macht klug</p></li>
+      <li class="benefit reveal" style="--d:.08s"><span class="benefit-glyph v-a" aria-hidden="true">♞</span><p>Schach fördert die Konzentrations&shy;fähigkeit und Intelligenz</p></li>
+      <li class="benefit reveal" style="--d:.14s"><span class="benefit-glyph v-c" aria-hidden="true">♝</span><p>Steigerung von Fantasie und Kreativität</p></li>
+      <li class="benefit reveal" style="--d:.20s"><span class="benefit-glyph v-a" aria-hidden="true">♜</span><p>Trainiertes Gedächtnis</p></li>
+      <li class="benefit reveal" style="--d:.26s"><span class="benefit-glyph v-c" aria-hidden="true">♛</span><p>Schach für bessere Schulnoten!</p></li>
+      <li class="benefit reveal" style="--d:.32s"><span class="benefit-glyph v-b" aria-hidden="true">♟</span><p>Die Ausbildung effektiver Denkstrategien und die Entwicklung von Problemlösungs&shy;kompetenzen</p></li>
+      <li class="benefit reveal" style="--d:.38s"><span class="benefit-glyph v-a" aria-hidden="true">♔</span><p>Bessere Planung und Weitblick</p></li>
+      <li class="benefit reveal" style="--d:.44s"><span class="benefit-glyph v-c" aria-hidden="true">♘</span><p>Schach ist Gewaltprävention!</p></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= ZAHLEN ================= -->
+<div class="stats" id="zahlen">
+  <div class="container stats-grid">
+    <div class="stat reveal"><span class="stat-num" data-count="2004">0</span><span class="stat-label">gegründet</span></div>
+    <div class="stat reveal" style="--d:.08s"><span class="stat-num" data-count-years="2004">0</span><span class="stat-label">Jahre Erfahrung</span></div>
+    <div class="stat reveal" style="--d:.16s"><span class="stat-num" data-count="5" data-prefix="ab ">0</span><span class="stat-label">Jahren Einstieg</span></div>
+    <div class="stat reveal" style="--d:.24s"><span class="stat-num" data-count="18">0</span><span class="stat-label">Kinderschachturniere</span></div>
+  </div>
+</div>
+
+<!-- ================= IMPRESSIONEN ================= -->
+<section class="section" id="impressionen">
+  <div class="container impress-grid">
+    <div class="impress-copy reveal">
+      <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Ein Blick zurück</span></p>
+      <h2 class="h-display h2">Impressionen vom<br>„13.&nbsp;Karlsruher Kinderschach&shy;turnier“</h2>
+      <p class="impress-date script-line">vom 14. Juli 2018</p>
+      <p class="body-text">Volle Bretter, rauchende Köpfe und ganz viel Spielfreude – so sieht es aus, wenn unsere kleinen Großmeisterinnen und Großmeister um Punkte kämpfen.</p>
+    </div>
+    <figure class="impress-photo reveal" style="--d:.12s">
+      <button class="zoomable" type="button" data-lightbox data-caption="13. Karlsruher Kinderschachturnier, 14. Juli 2018 – © time4you GmbH communication &amp; learning">
+        <img src="images/turnier-2018.jpg" alt="Ein Junge im grünen T-Shirt zieht beim Kinderschachturnier eine Figur">
+        <span class="zoom-hint" aria-hidden="true">⌕ Zum Vergrößern tippen</span>
+      </button>
+      <figcaption class="credit">© time4you GmbH communication &amp; learning</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= ÜBER UNS ================= -->
+<section class="section section--alt" id="ueber-uns">
+  <div class="container about-grid">
+    <div class="about-photo reveal">
+      <img src="images/unterricht.jpg" alt="Ein Schachtrainer erklärt Kindern im Klassenzimmer eine Stellung am Brett">
+      <span class="float-chip float-chip--about"><span class="g" aria-hidden="true">♘</span>Trainer-C-Lizenz</span>
+    </div>
+    <div class="about-copy">
+      <header class="section-head reveal">
+        <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Lernen Sie uns kennen</span></p>
+        <h2 class="h-display h2">Über uns</h2>
+      </header>
+      <h3 class="sub-head reveal">Ihre Vorteile in der Schachschule – Rad</h3>
+      <ul class="checklist">
+        <li class="check-item reveal" style="--d:.04s"><span class="check-ico" aria-hidden="true">✓</span>Wir sind die einzige Schule in der Region Karlsruhe für Kinder ab 5 Jahren</li>
+        <li class="check-item reveal" style="--d:.10s"><span class="check-ico" aria-hidden="true">✓</span>Pädagogische Kompetenzen der Schachtrainer/innen für kleine Kinder</li>
+        <li class="check-item reveal" style="--d:.16s"><span class="check-ico" aria-hidden="true">✓</span>Schachtrainer mit fachlichen Kompetenzen für Kinderschachkurse</li>
+        <li class="check-item reveal" style="--d:.22s"><span class="check-ico" aria-hidden="true">✓</span>Schachtrainer mit anerkannter Trainer-C-Lizenz</li>
+      </ul>
+      <h3 class="sub-head reveal">Ziele</h3>
+      <p class="body-text ziele-text clamped reveal" id="zieleText">Seit 2004 lernen die Kinder ab 5 Jahren Schach in unserer Schule. Gerade im frühen Kindesalter erlangt das Schachspiel eine zunehmende erzieherische Bedeutung. Unser Ziel ist nicht nur das Erlernen des Brettspiels, sondern die schrittweise Erlangung von Konzentration und Kreativität, welche sich auch positiv auf die schulischen Leistungen auswirken.</p>
+      <button class="link-btn reveal" type="button" id="zieleToggle" aria-expanded="false" aria-controls="zieleText">Mehr lesen <span class="chev" aria-hidden="true">▾</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= KURSE ================= -->
+<section class="section" id="kurse">
+  <div class="container">
+    <header class="section-head reveal">
+      <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Unser Angebot</span></p>
+      <h2 class="h-display h2">Kurse</h2>
+    </header>
+    <div class="courses">
+      <article class="course reveal">
+        <span class="benefit-glyph v-a" aria-hidden="true">♟</span>
+        <h3>Kinderschach ab 5&nbsp;Jahren</h3>
+        <p>Spielerischer Einstieg in die Welt der 64 Felder – kindgerecht, geduldig und seit 2004 bewährt.</p>
+      </article>
+      <article class="course reveal" style="--d:.1s">
+        <span class="benefit-glyph v-c" aria-hidden="true">♘</span>
+        <h3>Qualifizierte Trainer</h3>
+        <p>Pädagogische Kompetenz für kleine Kinder und fachliches Können mit anerkannter Trainer-C-Lizenz.</p>
+      </article>
+      <article class="course reveal" style="--d:.2s">
+        <span class="benefit-glyph v-b" aria-hidden="true">♗</span>
+        <h3>Einstieg jederzeit</h3>
+        <p>Ein Einstieg ist jederzeit möglich – nach vorheriger Terminabsprache, ganz ohne Vorkenntnisse.</p>
+      </article>
+    </div>
+    <div class="kurse-banner reveal">
+      <p><strong>Termine &amp; Preise auf Anfrage</strong> – wir beraten Sie gerne persönlich vor Ort oder am Telefon.</p>
+      <a class="btn btn--light" href="#schnupperstunde">Zur Schnupperstunde</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SPIELECKE ================= -->
+<section class="section section--alt section--play" id="spielecke">
+  <span class="bg-glyph bg-glyph--3" aria-hidden="true">♝</span>
+  <div class="container">
+    <header class="section-head reveal">
+      <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Kleine Pause gefällig?</span></p>
+      <h2 class="h-display h2">Die Spielecke</h2>
+      <p class="body-text section-intro">Hier dürfen kleine Großmeister sofort loslegen: Lerne die Figuren kennen oder geh mit dem Springer auf Sternejagd!</p>
+    </header>
+    <div class="tabs reveal" role="tablist" aria-label="Spiele">
+      <button class="tab" id="tabTrainer" role="tab" aria-selected="true" aria-controls="panelTrainer">♘ Figuren-Trainer</button>
+      <button class="tab" id="tabJagd" role="tab" aria-selected="false" aria-controls="panelJagd">⭐ Springer-Jagd</button>
+    </div>
+
+    <!-- Figuren-Trainer -->
+    <div class="play-panel reveal" id="panelTrainer" role="tabpanel" aria-labelledby="tabTrainer">
+      <div class="play-grid">
+        <div class="board-side">
+          <div class="board-frame">
+            <div class="board board--8" id="trainerBoard" aria-label="Übungsbrett Figuren-Trainer"></div>
+          </div>
+        </div>
+        <div class="play-info">
+          <h3 class="sub-head">Wie zieht welche Figur?</h3>
+          <div class="piece-picker" role="group" aria-label="Figur auswählen">
+            <button class="pp-btn" data-piece="pawn" aria-pressed="false" title="Bauer">♙</button>
+            <button class="pp-btn" data-piece="rook" aria-pressed="false" title="Turm">♖</button>
+            <button class="pp-btn" data-piece="knight" aria-pressed="true" title="Springer">♘</button>
+            <button class="pp-btn" data-piece="bishop" aria-pressed="false" title="Läufer">♗</button>
+            <button class="pp-btn" data-piece="queen" aria-pressed="false" title="Dame">♕</button>
+            <button class="pp-btn" data-piece="king" aria-pressed="false" title="König">♔</button>
+          </div>
+          <p class="play-desc" id="trainerDesc" aria-live="polite">Der Springer zieht im L und darf als einzige Figur über andere hinwegspringen.</p>
+          <p class="play-hint script-line">Tippe auf ein markiertes Feld, um zu ziehen!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Springer-Jagd -->
+    <div class="play-panel reveal" id="panelJagd" role="tabpanel" aria-labelledby="tabJagd" hidden>
+      <div class="play-grid">
+        <div class="board-side">
+          <div class="board-frame board-frame--game">
+            <div class="board-wrap">
+              <div class="board board--5" id="gameBoard" aria-label="Spielbrett Springer-Jagd"></div>
+              <div class="win-overlay" id="winOverlay" hidden>
+                <p class="win-title h-display">Geschafft!</p>
+                <p class="win-text" id="winText">Alle Sterne gesammelt!</p>
+                <button class="btn btn--primary" type="button" id="winRestart">Nochmal spielen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="play-info">
+          <h3 class="sub-head">Springer-Jagd</h3>
+          <p class="play-desc">Sammle alle drei Sterne! Der Springer zieht im L – tippe auf ein markiertes Feld und hüpf los.</p>
+          <div class="hud">
+            <span class="hud-pill">Züge: <strong id="moveCount">0</strong></span>
+            <span class="hud-pill">Sterne: <strong id="starCount">0/3</strong></span>
+            <span class="hud-pill hud-pill--record" id="recordPill" hidden>Rekord: <strong id="recordCount">–</strong></span>
+          </div>
+          <button class="btn btn--ghost btn--small" type="button" id="gameReset">↺ Neu starten</button>
+          <p class="game-msg script-line" id="gameMsg" aria-live="polite">Auf die Felder, fertig, los!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCHNUPPERSTUNDE ================= -->
+<section class="section section--blush" id="schnupperstunde">
+  <div class="container">
+    <header class="section-head reveal">
+      <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Kostenlos ausprobieren</span></p>
+      <h2 class="h-display h2">Kostenlose Schnupper&shy;stunde</h2>
+      <p class="body-text section-intro">Sie haben Interesse an einer Schnupperstunde? Vielen Dank für Ihr Interesse an einer kostenlosen Schnupperstunde unserer Kinderschachschule-Rad. Der Einstieg läuft folgendermaßen ab:</p>
+    </header>
+    <ol class="steps">
+      <li class="step reveal">
+        <span class="step-num" aria-hidden="true">1</span>
+        <h3>Informationsgespräch</h3>
+        <p>Telefonisch oder direkt vor Ort – wir nehmen uns Zeit für Ihre Fragen.</p>
+      </li>
+      <li class="step reveal" style="--d:.1s">
+        <span class="step-num" aria-hidden="true">2</span>
+        <h3>Kostenlose Schnupperstunde</h3>
+        <p>Nach Terminvereinbarung – Ihr Kind spielt einfach unverbindlich mit.</p>
+      </li>
+      <li class="step reveal" style="--d:.2s">
+        <span class="step-num" aria-hidden="true">3</span>
+        <h3>Mitgliedschaft</h3>
+        <p>Wenn es Spaß macht, geht es weiter – der Einstieg ist jederzeit möglich.</p>
+      </li>
+    </ol>
+    <div class="schnupper-cta reveal">
+      <p class="script-line big">Ein Einstieg ist jederzeit nach vorheriger Terminabsprache möglich!</p>
+      <p class="body-text">Besuchen Sie unverbindlich eine kostenlose Schnupperstunde an unserer Schachschule.</p>
+      <a class="btn btn--primary btn--big" href="#kontakt">Kostenlose Schnupperstunde</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TURNIER ================= -->
+<section class="section section--night" id="turnier">
+  <span class="night-watermark" aria-hidden="true">18.</span>
+  <div class="container turnier-grid">
+    <div class="turnier-copy reveal">
+      <p class="eyebrow"><span class="checker checker--light" aria-hidden="true"></span><span class="script script--light">Merkt euch den Termin!</span></p>
+      <h2 class="h-display h2">Karlsruher Kinderschach&shy;turnier</h2>
+      <p class="body-text body-text--night">Am <strong>20. Juni 2026</strong> findet das <strong>„18. Karlsruher Kinderschachturnier“</strong> statt!</p>
+      <p class="body-text body-text--night">Das Turnier findet wieder in der Schachschule für Kinder statt:</p>
+      <p class="turnier-address"><span aria-hidden="true">♜</span> Hardtstr. 37A, Bau 2 (neben dem Tempel), 76185 Karlsruhe</p>
+    </div>
+    <div class="turnier-count reveal" style="--d:.12s">
+      <p class="count-label" id="countLabel">Countdown zum Turnier</p>
+      <div class="countdown" id="countdown" role="timer" aria-label="Countdown zum Turnier">
+        <div class="cd-tile"><span class="cd-num" id="cdDays">–</span><span class="cd-label">Tage</span></div>
+        <div class="cd-tile"><span class="cd-num" id="cdHours">–</span><span class="cd-label">Std.</span></div>
+        <div class="cd-tile"><span class="cd-num" id="cdMins">–</span><span class="cd-label">Min.</span></div>
+        <div class="cd-tile"><span class="cd-num" id="cdSecs">–</span><span class="cd-label">Sek.</span></div>
+      </div>
+      <p class="count-past script-line" id="countPast" hidden>Das Turnier hat bereits stattgefunden – der nächste Termin wird hier angekündigt!</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WARUM SCHACH ================= -->
+<section class="section" id="warum-schach">
+  <div class="container warum-grid">
+    <div class="warum-copy">
+      <header class="section-head reveal">
+        <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Gute Gründe</span></p>
+        <h2 class="h-display h2">Warum Schach für Kinder?</h2>
+      </header>
+      <p class="body-text reveal">Das Schachspiel bietet die Möglichkeit, spielerisch und mit Spaß die Fähigkeit des logischen Denkens zu fördern und zu lernen, sich intensiv und geduldig mit einer Problemstellung auseinanderzusetzen.</p>
+      <button class="link-btn reveal" type="button" id="warumToggle" aria-expanded="false" aria-controls="warumMore">Mehr lesen <span class="chev" aria-hidden="true">▾</span></button>
+      <div class="warum-more" id="warumMore" hidden>
+        <div class="mini-col"><h4>♞ Konzentration &amp; Ausdauer</h4><p>Ruhig sitzen, genau hinschauen, dranbleiben: Am Brett üben Kinder, bei einer Sache zu bleiben.</p></div>
+        <div class="mini-col"><h4>♝ Fantasie &amp; Kreativität</h4><p>Jede Partie erzählt eine neue Geschichte – Kinder entwickeln eigene Ideen und Pläne.</p></div>
+        <div class="mini-col"><h4>♛ Strategie &amp; Weitblick</h4><p>Wer vorausdenkt, plant besser: gute Züge heute, gute Entscheidungen morgen.</p></div>
+      </div>
+    </div>
+    <aside class="quote-card reveal" style="--d:.12s">
+      <span class="quote-glyph" aria-hidden="true">♞</span>
+      <blockquote>„Konzentration, Kreativität und Ausdauer sind der Schlüssel zum erfolgreichen Spiel.“</blockquote>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= KONTAKT ================= -->
+<section class="section section--alt" id="kontakt">
+  <div class="container">
+    <header class="section-head reveal">
+      <p class="eyebrow"><span class="checker" aria-hidden="true"></span><span class="script">Wir freuen uns auf Sie</span></p>
+      <h2 class="h-display h2">Kontakt</h2>
+    </header>
+    <div class="contact-grid">
+      <div class="contact-card reveal">
+        <h3 class="sub-head">So finden Sie uns</h3>
+        <ul class="contact-list">
+          <li><span class="g" aria-hidden="true">♜</span><span><strong>Schach für Kinder</strong><br>Hardtstr. 37A, Bau 2 (neben dem Tempel)</span></li>
+          <li><span class="g" aria-hidden="true">♟</span><span>76185 Karlsruhe</span></li>
+          <li><span class="g g--red" aria-hidden="true">♞</span><span>Kostenlose Schnupperstunde nach Terminvereinbarung</span></li>
+          <li><span class="g" aria-hidden="true">♛</span><span>Informationsgespräch telefonisch oder direkt vor Ort</span></li>
+        </ul>
+        <span class="checker checker--wide" aria-hidden="true"></span>
+      </div>
+      <div class="contact-card reveal" style="--d:.12s">
+        <h3 class="sub-head">Schreiben Sie uns</h3>
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="field">
+            <label for="fName">Name *</label>
+            <input id="fName" name="name" type="text" autocomplete="name" required placeholder="Vor- und Nachname">
+          </div>
+          <div class="field">
+            <label for="fMail">E-Mail *</label>
+            <input id="fMail" name="email" type="email" autocomplete="email" required placeholder="ihre@email.de">
+          </div>
+          <div class="field">
+            <label for="fMsg">Nachricht *</label>
+            <textarea id="fMsg" name="message" rows="5" required placeholder="Wie alt ist Ihr Kind? Wann passt Ihnen eine Schnupperstunde?"></textarea>
+          </div>
+          <p class="form-error" id="formError" hidden>Bitte füllen Sie alle Felder aus – die E-Mail-Adresse muss gültig sein.</p>
+          <button class="btn btn--primary" type="submit">Nachricht senden</button>
+          <p class="form-note">Hinweis: Diese Vorschau versendet noch keine Nachrichten.</p>
+        </form>
+        <div class="form-success" id="formSuccess" hidden>
+          <span class="success-glyph" aria-hidden="true">♛</span>
+          <h4>Vielen Dank<span id="successName"></span>!</h4>
+          <p>Ihre Nachricht ist notiert. Wir melden uns so schnell wie möglich – bis bald am Brett!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <img src="images/logo.jpg" alt="Logo: Schach für Kinder" class="footer-logo">
+      <p class="script-line footer-claim">Mit Spaß das logische Denken fördern</p>
+    </div>
+    <nav class="footer-nav" aria-label="Fußnavigation">
+      <a href="#home">Home</a>
+      <a href="#ueber-uns">Über uns</a>
+      <a href="#kurse">Kurse</a>
+      <a href="#schnupperstunde">Schnupperstunde</a>
+      <a href="#warum-schach">Warum Schach</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
+    <address class="footer-address">
+      <strong>Schach für Kinder</strong><br>
+      Hardtstr. 37A, Bau 2 (neben Tempel)<br>
+      76185 Karlsruhe
+    </address>
+  </div>
+  <div class="container footer-bottom">
+    <p>© <span id="footYear">2026</span> Schach für Kinder · Schachschule in Karlsruhe</p>
+    <p class="footer-mini">Turnierfotos: © time4you GmbH communication &amp; learning</p>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" aria-label="Nach oben scrollen">♞</button>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Bildansicht" hidden>
+  <button class="lightbox-close" id="lightboxClose" aria-label="Schließen">✕</button>
+  <figure>
+    <img id="lightboxImg" src="" alt="">
+    <figcaption id="lightboxCap"></figcaption>
+  </figure>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
