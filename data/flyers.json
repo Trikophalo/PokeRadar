@@ -1,11 +1,11 @@
 {
-  "generated_for_week": "2026-08-24",
+  "generated_for_week": "2026-08-31",
   "source": "simulated",
   "notice": "Simulated flyer data. No retailer content is fetched, scraped or redistributed. Production sources this from a licensed aggregator API — see PLANNING.md §10.1.",
   "week": {
-    "valid_from": "2026-08-24",
-    "valid_until": "2026-08-29",
-    "key": "2026-08-24"
+    "valid_from": "2026-08-31",
+    "valid_until": "2026-09-05",
+    "key": "2026-08-31"
   },
   "keywords": [
     "Pokémon",
@@ -19,208 +19,223 @@
   ],
   "flyers": [
     {
-      "id": "flyer_2026-08-24_mller",
+      "id": "flyer_2026-08-31_mller",
       "chain": "Müller",
       "title": "Müller Wochenangebote",
       "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
       "page_count": 24,
       "viewer_url": null,
-      "cover_seed": "2026-08-24:Müller:0",
-      "source": "simulated",
-      "matches": [
-        {
-          "page": 14,
-          "term": "Booster",
-          "offer_title": "Pokémon Booster Display",
-          "price": "21,49 €",
-          "method": "offer_api"
-        }
-      ]
-    },
-    {
-      "id": "flyer_2026-08-24_rossmann",
-      "chain": "Rossmann",
-      "title": "Rossmann Prospekt",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 20,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:Rossmann:1",
-      "source": "simulated",
-      "matches": []
-    },
-    {
-      "id": "flyer_2026-08-24_dm",
-      "chain": "dm",
-      "title": "dm Aktuelle Angebote",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 16,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:dm:2",
-      "source": "simulated",
-      "matches": []
-    },
-    {
-      "id": "flyer_2026-08-24_edeka",
-      "chain": "EDEKA",
-      "title": "EDEKA Angebote der Woche",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 28,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:EDEKA:3",
-      "source": "simulated",
-      "matches": []
-    },
-    {
-      "id": "flyer_2026-08-24_rewe",
-      "chain": "REWE",
-      "title": "REWE Handzettel",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 26,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:REWE:4",
-      "source": "simulated",
-      "matches": []
-    },
-    {
-      "id": "flyer_2026-08-24_kaufland",
-      "chain": "Kaufland",
-      "title": "Kaufland Wochenprospekt",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 32,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:Kaufland:5",
-      "source": "simulated",
-      "matches": []
-    },
-    {
-      "id": "flyer_2026-08-24_mediamarkt",
-      "chain": "MediaMarkt",
-      "title": "MediaMarkt Angebote",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 18,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:MediaMarkt:6",
-      "source": "simulated",
-      "matches": [
-        {
-          "page": 10,
-          "term": "Booster",
-          "offer_title": "Pokémon Sammelalbum mit Promokarte",
-          "price": "39,95 €",
-          "method": "offer_api"
-        }
-      ]
-    },
-    {
-      "id": "flyer_2026-08-24_thalia",
-      "chain": "Thalia",
-      "title": "Thalia Aktionen",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 12,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:Thalia:7",
-      "source": "simulated",
-      "matches": []
-    },
-    {
-      "id": "flyer_2026-08-24_smythstoys",
-      "chain": "Smyths Toys",
-      "title": "Smyths Toys Superkatalog",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 36,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:Smyths Toys:8",
-      "source": "simulated",
-      "matches": [
-        {
-          "page": 18,
-          "term": "Booster",
-          "offer_title": "Pokémon Sammelkarten 3er-Blister",
-          "price": "25,49 €",
-          "method": "offer_api"
-        }
-      ]
-    },
-    {
-      "id": "flyer_2026-08-24_gamestop",
-      "chain": "GameStop",
-      "title": "GameStop Deals",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 10,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:GameStop:9",
-      "source": "simulated",
-      "matches": [
-        {
-          "page": 7,
-          "term": "Trading Cards",
-          "offer_title": "Pokémon Sammelalbum mit Promokarte",
-          "price": "32,99 €",
-          "method": "offer_api"
-        }
-      ]
-    },
-    {
-      "id": "flyer_2026-08-24_galeria",
-      "chain": "Galeria",
-      "title": "Galeria Wochen-Highlights",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 22,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:Galeria:10",
-      "source": "simulated",
-      "matches": [
-        {
-          "page": 10,
-          "term": "Pokémon",
-          "offer_title": "Pokémon Sammelkarten 3er-Blister",
-          "price": "38,95 €",
-          "method": "offer_api"
-        }
-      ]
-    },
-    {
-      "id": "flyer_2026-08-24_netto",
-      "chain": "Netto",
-      "title": "Netto Wochenangebote",
-      "region_code": "DE",
-      "valid_from": "2026-08-24",
-      "valid_until": "2026-08-29",
-      "page_count": 20,
-      "viewer_url": null,
-      "cover_seed": "2026-08-24:Netto:11",
+      "cover_seed": "2026-08-31:Müller:0",
       "source": "simulated",
       "matches": [
         {
           "page": 11,
-          "term": "Elite Trainer Box",
-          "offer_title": "Pokémon Sammelkarten 3er-Blister",
-          "price": "25,95 €",
+          "term": "Karmesin & Purpur",
+          "offer_title": "Trading Cards Mini-Tin",
+          "price": "17,49 €",
           "method": "offer_api"
         }
       ]
+    },
+    {
+      "id": "flyer_2026-08-31_rossmann",
+      "chain": "Rossmann",
+      "title": "Rossmann Prospekt",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 20,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:Rossmann:1",
+      "source": "simulated",
+      "matches": [
+        {
+          "page": 10,
+          "term": "TCG",
+          "offer_title": "Trading Cards Mini-Tin",
+          "price": "21,49 €",
+          "method": "offer_api"
+        },
+        {
+          "page": 15,
+          "term": "TCG",
+          "offer_title": "Pokémon Elite Trainer Box",
+          "price": "42,99 €",
+          "method": "offer_api"
+        }
+      ]
+    },
+    {
+      "id": "flyer_2026-08-31_dm",
+      "chain": "dm",
+      "title": "dm Aktuelle Angebote",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 16,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:dm:2",
+      "source": "simulated",
+      "matches": []
+    },
+    {
+      "id": "flyer_2026-08-31_edeka",
+      "chain": "EDEKA",
+      "title": "EDEKA Angebote der Woche",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 28,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:EDEKA:3",
+      "source": "simulated",
+      "matches": []
+    },
+    {
+      "id": "flyer_2026-08-31_rewe",
+      "chain": "REWE",
+      "title": "REWE Handzettel",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 26,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:REWE:4",
+      "source": "simulated",
+      "matches": [
+        {
+          "page": 17,
+          "term": "Pokemon",
+          "offer_title": "Pokémon Sammelkarten 3er-Blister",
+          "price": "31,95 €",
+          "method": "offer_api"
+        }
+      ]
+    },
+    {
+      "id": "flyer_2026-08-31_kaufland",
+      "chain": "Kaufland",
+      "title": "Kaufland Wochenprospekt",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 32,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:Kaufland:5",
+      "source": "simulated",
+      "matches": [
+        {
+          "page": 17,
+          "term": "Sammelkarten",
+          "offer_title": "Pokémon Booster Display",
+          "price": "3,95 €",
+          "method": "offer_api"
+        }
+      ]
+    },
+    {
+      "id": "flyer_2026-08-31_mediamarkt",
+      "chain": "MediaMarkt",
+      "title": "MediaMarkt Angebote",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 18,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:MediaMarkt:6",
+      "source": "simulated",
+      "matches": [
+        {
+          "page": 12,
+          "term": "TCG",
+          "offer_title": "Pokémon Tin-Box sortiert",
+          "price": "19,49 €",
+          "method": "offer_api"
+        }
+      ]
+    },
+    {
+      "id": "flyer_2026-08-31_thalia",
+      "chain": "Thalia",
+      "title": "Thalia Aktionen",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 12,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:Thalia:7",
+      "source": "simulated",
+      "matches": []
+    },
+    {
+      "id": "flyer_2026-08-31_smythstoys",
+      "chain": "Smyths Toys",
+      "title": "Smyths Toys Superkatalog",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 36,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:Smyths Toys:8",
+      "source": "simulated",
+      "matches": [
+        {
+          "page": 23,
+          "term": "Elite Trainer Box",
+          "offer_title": "Pokémon Booster Display",
+          "price": "17,99 €",
+          "method": "offer_api"
+        }
+      ]
+    },
+    {
+      "id": "flyer_2026-08-31_gamestop",
+      "chain": "GameStop",
+      "title": "GameStop Deals",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 10,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:GameStop:9",
+      "source": "simulated",
+      "matches": [
+        {
+          "page": 7,
+          "term": "Booster",
+          "offer_title": "Pokémon Tin-Box sortiert",
+          "price": "15,95 €",
+          "method": "offer_api"
+        }
+      ]
+    },
+    {
+      "id": "flyer_2026-08-31_galeria",
+      "chain": "Galeria",
+      "title": "Galeria Wochen-Highlights",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 22,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:Galeria:10",
+      "source": "simulated",
+      "matches": []
+    },
+    {
+      "id": "flyer_2026-08-31_netto",
+      "chain": "Netto",
+      "title": "Netto Wochenangebote",
+      "region_code": "DE",
+      "valid_from": "2026-08-31",
+      "valid_until": "2026-09-05",
+      "page_count": 20,
+      "viewer_url": null,
+      "cover_seed": "2026-08-31:Netto:11",
+      "source": "simulated",
+      "matches": []
     }
   ]
 }
